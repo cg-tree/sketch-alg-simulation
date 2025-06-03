@@ -1,5 +1,6 @@
 
-
+#ifndef LINE_H
+#define LINE_H
 class Line {
 
 public:
@@ -59,3 +60,4 @@ public:
 };
 
 
+#endif /* LINE_H*/

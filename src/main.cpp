@@ -1,5 +1,31 @@
 
+#include <cmath>
+#include <vector>
+#include <cstdio>
+#include <random>
+#include <string>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+#include <Eigen/Dense>
+#include <map>
+
+using namespace std;
+
+#include "point.h"
+#include "line.h"
+
 #include "global.h"
+#include "utils.h"
+
+#include "ellipse.h"
+#include "plume.h"
+#include "drone.h"
+#include "cubicspline.h"
+#include "criticalpath.h"
+
+#include "kitchen_sink.h"
 
 int main()
 {

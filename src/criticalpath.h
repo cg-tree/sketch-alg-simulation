@@ -1,5 +1,4 @@
 
-#include "drone.h"
 
 struct criticalPath{
     Point stcriticalPoint;
@@ -251,7 +250,6 @@ struct criticalPath{
         CubicSpline curv_spline;
         
         // need to get x values vs curvature
-        vector<double> xValues;
         vector<double> xValues;
         for(auto& point : localContour){
             xValues.push_back(point.x);

@@ -1,4 +1,6 @@
 
+#ifndef POINT_H
+#define POINT_H
 
 class Point {
 public:
@@ -42,4 +44,4 @@ double get_dist (Point A, Point B)
 {
     return sqrt ((A.x - B.x) * (A.x - B.x) + (A.y - B.y) * (A.y - B.y));
 }
-
+#endif /*POINT_H*/
