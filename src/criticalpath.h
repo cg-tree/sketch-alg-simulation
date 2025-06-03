@@ -9,6 +9,15 @@ struct criticalPath{
     static const int LEFT = 1;
     static const int RIGHT = 2;
     
+    /* begin modified def*/
+    // get derivaties of curvature by fitting spline
+    CubicSpline curv_spline;
+
+    vector<double> xValues;
+
+    vector<Point> localContour;
+    /* end modified def*/
+
     criticalPath(Point start, double epsilon, double res)
     : stcriticalPoint(start), diffepsilon(epsilon), contourRes(res) {
         // Initialize the critical path by finding the first critical point
@@ -251,55 +260,6 @@ struct criticalPath{
         
         // need to get x values vs curvature
         vector<double> xValues;
-        for(auto& point : localContour){
-            xValues.push_back(point.x);
-        }
-        curv_spline.setPoints(xValues, lastCPCurvatures);
-        vector<double> curv_splineDerivatives;
-        for (size_t i = 0; i < xValues.size(); ++i) {
-            double derivative = curv_spline.getDerivative(xValues[i]);
-            curv_splineDerivatives.push_back(std::pow(derivative, 2));
-        }
-
-        // now get where minimized since we squared derivative
-        size_t bestIdx = 0;
-        double minSqVal = std::numeric_limits<double>::max();
-        for (size_t i = 1; i + 1 < curv_splineDerivatives.size(); ++i) {
-
-            if (curv_splineDerivatives[i] < minSqVal) {
-                    bestIdx = i;
-                    minSqVal = curv_splineDerivatives[i];
-                }
-        } 
-
-
-        Point criticalPoint = localContour[bestIdx];
-
-        criticalPathPoints.push_back(criticalPoint);
-
-        return criticalPoint;
-    }
-
-    Point getCrossingPoint(Drone droneA, Drone droneB){
-        // NOte that Drone A is the drone we are determining
-        // the crossing point for 
-
-        cout << "get crossing point function " << endl;
-        double startLevel = getGaussian(droneA.position);
-        double endLevel = getGaussian(droneA.last);
-        cout << "start level: " << startLevel << endl;
-        cout << "end level: " << endLevel << endl;
-
-        // used to look for point that minimizes the curvature
-        // (critical point numerically)
-        auto findMinIndex = [](const std::vector<double>& v) -> size_t {
-            return std::distance(v.begin(), std::min_element(v.begin(), v.end()));
-        };
-
-        double startCenterX = (droneA.position.x + droneB.position.x) * 0.5;
-        double startCenterY = (droneA.position.y + droneB.position.y) * 0.5;
-
-        // FIX ME: is this the right way to deal with these two cases?
         for(auto& point : localContour){
             xValues.push_back(point.x);
         }
