@@ -1,0 +1,32 @@
+
+setup:
+spack load python py-pip
+
+activate virtualenv with:
+source envname/bin/activate
+
+install pybind11:
+pip install --require-virtualenv pybind11
+
+compile on macos with:
+c++ -O3 -Wall -shared -std=c++11 -undefined dynamic_lookup $(python3 -m pybind11 --includes) example.cpp -o example$(python3-config --extension-suffix)
+
+compile on linux with:
+c++ -O3 -Wall -shared -std=c++11 -fPIC $(python3 -m pybind11 --includes) example.cpp -o example$(python3-config --extension-suffix)
+
+
+usage:
+import example
+example.add(1,2)
+
+
+additionally if we move to using submodules to handle project dependencies:
+When you are working on a project in Git, you can use the pybind11 repository as a submodule. From your git repository, use:
+
+git submodule add -b stable ../../pybind/pybind11 extern/pybind11
+git submodule update --init
+
+This assumes you are placing your dependencies in extern/, and that you are using GitHub; 
+
+If you used Include as a submodule to get the pybind11 source, then use $(python3-config --includes) -Iextern/pybind11/include
+instead of $(python3 -m pybind11 --includes) in the above compilation, as explained in Building manually.

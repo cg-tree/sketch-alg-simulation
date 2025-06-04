@@ -327,6 +327,17 @@ void sketch_algorithm (double alpha)
     
     
     do{
+
+        /******************************/
+        /* try to catch signals
+         * currently fails because we are stuck inside one of the functions called later in this loop
+         * use ctrl+z to pause and kill to kill the process if other signals fail
+         */
+        if(PyErr_CheckSignals()){
+            throw py::error_already_set();
+        }
+        /******************************/
+
         int iter = 0;
 
 
