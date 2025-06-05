@@ -309,15 +309,42 @@ bool CrossCriticalPath(Drone &A, Drone &B, double alpha, criticalPath &cp)
 
 /***********************************************************************/
 
-void sketch_algorithm (double alpha)
+void sketch_algorithm ()
 {
-    cout << "Running Sketch Algorithm for eapsilon = " << epsilon << endl;
+    gaussianCenter.clear();
+    gaussianVar.clear();
+    double alpha = 1.47; // slightly off pi/2 to try to cause early crossing
+    num = 4;
+    CROSSBOUND = 100;
+    majorAxis = 0.25;
+    minorAxis = 0.25;
+    DIST = sqrt (49);
+    THRESHOLD = exp (-majorAxis*majorAxis);
+   
+    drone_start_B = Point (1 + DIST*epsilon*0.5,-2.38);
+    drone_start_A = Point (1 - DIST*epsilon*0.5,-2.38);
+
+    drone_start_BB = Point (1 + DIST*epsilon*0.5,-2.38);
+    drone_start_AB = Point (1 - DIST*epsilon*0.5,-2.38);
+    
+    // data/gaussian_contours_data_7.txt  
+    gaussianCenter.push_back(Point(1,1));
+    gaussianCenter.push_back(Point(-2,0));
+    gaussianCenter.push_back(Point(1,0));
+    gaussianCenter.push_back(Point(4,0));
+    
+    gaussianVar.push_back(Point(0.6,0.6));
+    gaussianVar.push_back(Point(0.8,1.0));
+    gaussianVar.push_back(Point(0.9,1.8));
+    gaussianVar.push_back(Point(0.5,0.5));
+
+    print_test_infrastructure_info(alpha); //print initialization stats
+
+    cout << "Running Sketch Algorithm for epsilon = " << epsilon << endl;
     
     
     Drone A (drone_start_A, drone_start_A, 1, 0, true);
     Drone B (drone_start_B, drone_start_B, 2, 0, false);
-
-    int TOKEN = 2;
     
     bool loopEnd = false ;
 
@@ -333,7 +360,7 @@ void sketch_algorithm (double alpha)
          * currently fails because we are stuck inside one of the functions called later in this loop
          * use ctrl+z to pause and kill to kill the process if other signals fail
          */
-        if(PyErr_CheckSignals()){
+        /*if(PyErr_CheckSignals()){
             throw py::error_already_set();
         }
         /******************************/
@@ -430,6 +457,9 @@ void sketch_algorithm (double alpha)
     return ;
 }   
 
+
+//Clobbered because this nesting is unneeded
+/*
 void test_infrastructure()
 {
     gaussianCenter.clear();
@@ -459,22 +489,9 @@ void test_infrastructure()
     gaussianVar.push_back(Point(0.9,1.8));
     gaussianVar.push_back(Point(0.5,0.5));
 
-    cout<<"Initializing test... "<<endl;
-    cout<<"Epsilon "<<epsilon<<endl;
-    cout<<"Initial direction "<<alpha<<endl;
-    cout<<"Number of Gaussians "<<num<<endl;
-    cout<<"Least difference between starting and end point "<<INF<<endl;
-    cout<<"Minimum crossings before checking termination "<<CROSSBOUND<<endl;
-    cout<<"Minimum distance factor between drones and minimum distance "<<DIST<<" " <<DIST * epsilon<<endl;
-    cout<<"Concentration THRESHOLD "<<THRESHOLD<<endl;
-    cout<<"Drone A starting point "<<drone_start_A.x<<" "<<drone_start_B.y<<endl;
-    cout<<"Drone B starting point "<<drone_start_B.x<<" "<<drone_start_A.y<<endl;
-    
-    cout<<"Centers of gaussians "<<endl;
-    
-    for (int i =0 ; i < num; i ++)
-        cout<<gaussianCenter[i].x<<" "<<gaussianCenter[i].y<<endl;
+    print_test_infrastructure_info(alpha); //print initialization stats
         
-    sketch_algorithm(alpha);
+    sketch_algorithm(alpha); // run the sketch alg
 }
+*/
 
