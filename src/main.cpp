@@ -25,7 +25,7 @@ using namespace std;
 #include "cubicspline.h"
 #include "criticalpath.h"
 
-#include "kitchen_sink.h"
+#include "kitchen_sync.h"
 
 int main()
 {

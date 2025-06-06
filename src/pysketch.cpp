@@ -30,7 +30,7 @@ using namespace std;
 #include "cubicspline.h"
 #include "criticalpath.h"
 
-#include "kitchen_sink.h"
+#include "kitchen_sync.h"
 
 void set_global_defaults()
 {
