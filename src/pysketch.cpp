@@ -30,6 +30,7 @@ using namespace std;
 #include "cubicspline.h"
 #include "criticalpath.h"
 
+#include "logging.h"
 #include "kitchen_sync.h"
 
 void set_global_defaults()
@@ -96,7 +97,9 @@ int main0()
     // for (epsilon = 0.005; i < 20 ; epsilon += 0.001)
     for (epsilon = 0.01; i < 1 ; epsilon += 0.001){
         INF = 4 * epsilon;
-        test_infrastructure ();
+        
+        //test_infrastructure ();//hack
+        
         eps.push_back (epsilon);
         ++i;
     }
@@ -137,7 +140,8 @@ PYBIND11_MODULE(pysketch, m) {
     
     m.def("main0", &main0, "A function that runs sketch");
     m.def("set_global_defaults", &set_global_defaults, "A function that runs the setup phase of the simulation");
-    m.def("sketch", [](){sketch_algorithm(alpha);}, "A function that runs sketch");
+    m.def("print_test_infrastructure_info", &print_test_infrastructure_info, "A function that prints simulation parameter info");
+    m.def("sketch", &sketch_algorithm, "A function that runs sketch");
 
     //define this so that we can look at thee gaussians
     py::class_<Point>(m,"Point")
@@ -180,9 +184,9 @@ PYBIND11_MODULE(pysketch, m) {
     m.def("set_crossbound",[](int c){CROSSBOUND=c;},"A function that sets CROSSBOUND");
     m.def("set_num",[](int c){num=c;},"A function that sets the number of gaussians");
     m.def("set_threshhold",[](double d){THRESHOLD=d;},"A function that sets THRESHOLD");
-    m.def("set_epsilon",[](int c){epsilon=c;},"A function that sets epsilon");
-    m.def("set_alpha",[](int c){alpha=c;},"A function that sets alpha");
-    m.def("set_dist",[](int c){DIST=c;},"A function that sets dist");
+    m.def("set_epsilon",[](double c){epsilon=c;},"A function that sets epsilon");
+    m.def("set_alpha",[](double c){alpha=c;},"A function that sets alpha");
+    m.def("set_dist",[](double c){DIST=c;},"A function that sets dist");
     m.def("set_majoraxis",[](double d){majorAxis=d;},"A function that sets majorAxis");
     m.def("set_minoraxis",[](double d){minorAxis=d;},"A function that sets minorAxis");
 

@@ -121,7 +121,7 @@ static void printEpochSummary(
 }
 
 // This function performs all the printing (cout) logic for test_infrastructure() initialization
-void print_test_infrastructure_info(double alpha) {
+void print_test_infrastructure_info() {
     std::cout << "Initializing test... " << std::endl;
     std::cout << "Epsilon " << epsilon << std::endl;
     std::cout << "Initial direction " << alpha << std::endl;

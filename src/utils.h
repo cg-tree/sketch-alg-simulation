@@ -1,9 +1,32 @@
 
+#ifndef LEGACY
+double changeGradient (double angleA, double angleB){
+  int avalid = abs(angleA) < (2*PI);
+  int bvalid = abs(angleB) < (2*PI);
+  switch(avalid + bvalid){
+    case 0:
+      fprintf(stderr,"Error in changeGradient invalid angle with magnitude > 2pi %f, %f\n",
+          angleA, angleB);
+  }
+  
+  double dangle = angleB-angleA;
+  int magnitude = abs(dangle) > (2*PI);
+  int sign = ((dangle < 0) << 1) -1;//plus or minus 1
+  dangle += (sign * magnitude * 2) * PI;
+  return dangle;
+}
+#endif //LEGACY
+//the absolute value is wrong if we really are dealing with polar coordinates
+//the approximation of pi we are using could cause us to accumulate a lot of error
+//when computing successive rotations of the gradient
 
+#ifdef LEGACY
 double changeGradient (double angleA, double angleB)
 {
+  //-theta = 2pi - theta
     return abs (angleA - angleB); //check this again for bug.
 }
+#endif //LEGACY
 
 void reverse (double &gradient)
 {
@@ -343,7 +366,7 @@ vector<Point> getGaussianContours(double level,
     return cleaned;
 }
 
-
+//what's this supposed to do?
 vector<double> get_Gaussian_vector (vector<Point> points, int id)
 {
     vector<double> x;
@@ -354,7 +377,7 @@ vector<double> get_Gaussian_vector (vector<Point> points, int id)
     return x;
 }
 
-
+//this looks wrong...
 double gradient_modulo (double gradient)
 {
     if (gradient > PI)
@@ -928,11 +951,41 @@ std::vector<double> compute_curvature_derivative(const std::vector<Point>& path,
 }
 
 
+#ifndef LEGACY
+double getAngle (vector<double> A)
+{
+    double normA = sqrt ( (A[0] * A[0]) + (A[1] * A[1]) );
+    
+    int magnitude = (A[0] != 0) + (A[1] != 0);
+    int max = (A[1]*A[1]) > (A[0]*A[0]);
+    
+    switch(magnitude){
 
+      case 1://vector has one nonzero component
+      case 2://vector has one nonzero component
+        switch(max){
+          case 0://A[1] is 0
+            return acos(A[0]/normA); //
+          case 1://A[0] is 0
+            return asin(A[1]/normA); //
+        }
+      default:
+      case 0://zero vector
+        fprintf(stderr,"Error in getAngle expected at least one non-zero component got %f %f\n",
+            A[0],A[1]);
+        exit(1);
+        return 0.0; //can't measure angle of zero vector
+    }
+}
+#endif //LEGACY
+
+#ifdef LEGACY
+//previous implementation
 double getAngle (vector<double> A)
 {
     double normA = sqrt (A[0] * A[0] + A[1] * A[1]);
     double angle = acos (abs(A[0])/normA);
+    
     if (A[0] >= 0 && A[1] >= 0)
         return angle;
     if (A[0] < 0 && A[1] >= 0)
@@ -941,6 +994,7 @@ double getAngle (vector<double> A)
         return PI + angle;
     return -angle;
 }
+#endif //LEGACY
 
 
 Point::Point(double x, double y) : x(x), y(y) {}

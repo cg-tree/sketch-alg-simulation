@@ -36,6 +36,7 @@ int main()
     // for (epsilon = 0.005; i < 20 ; epsilon += 0.001)
     for (epsilon = 0.01; i < 1 ; epsilon += 0.001){
         INF = 4 * epsilon;
+        test_infrastructure();
         sketch_algorithm();
         eps.push_back (epsilon);
         ++i;

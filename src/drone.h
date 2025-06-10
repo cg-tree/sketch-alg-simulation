@@ -51,6 +51,7 @@ class Drone {
         currPath(Point(0,0), Point(0,0)),
         side(side) {}
     
+    //this appears to be a broken implementation of this function but we need it to compile
     bool MoveDrone (double alpha, double dist, PLUME &plume, int callSource)
     {
         Point nextPosition;
@@ -231,6 +232,52 @@ class Drone {
         cout << "current point: " << position.x << " " << position.y << endl;
     }
 
+#ifndef LEGACY
+    
+    void LearnGradient(double alpha, double dist, Point crossingPoint, Drone &otherDrone, vector<double> gradient_vector) {
+        cout << "Learning gradient for drone pair" << endl;
+        
+        cout << "gradient vector: " << gradient_vector[0] << " " << gradient_vector[1] << endl;
+        double angle = 0;
+        if( ( gradient_vector[0] != 0 ) || ( gradient_vector[1] != 0 ) ){
+          angle = getAngle (gradient_vector);
+        }
+
+        if( abs(angle) > (2*PI) ){
+          fprintf(stderr, "Error in getAngle received invalid angle %f", angle);
+          exit(1);
+        }
+
+        cout << "angle: " << angle << endl;
+
+        //double gradient = angle + PI/2 ;
+        double gradient = angle;
+        gradient = gradient_modulo (gradient);
+        Point checkPoint = PointUtil::vector (gradient, dist);
+        checkPoint = crossingPoint + checkPoint;
+        /* 
+        // FIX ME: double check this
+        int orient;
+        if (side == 2) // 2 is RIGHT
+            orient = PointUtil::CLOCKWISE;
+        else
+            orient = PointUtil::COUNTERCLOCKWISE;
+        
+        Point curr =  position;
+        if (PointUtil::orientation (curr, crossingPoint, checkPoint) != orient)
+            reverse (gradient);
+
+        */
+
+        angleTurned += changeGradient(nabla + alpha, gradient);
+        nabla = gradient;
+            
+    }
+
+};
+#endif //LEGACY
+
+#ifdef LEGACY
     // This function is called when the drones cross the critical path
     // and need to learn the gradient (update nabla)
     void LearnGradient(double alpha, double dist, Point crossingPoint, Drone &otherDrone, vector<double> gradient_vector) {
@@ -266,5 +313,4 @@ class Drone {
     }
 
 };
-
-
+#endif //LEGACY
