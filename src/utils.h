@@ -996,6 +996,29 @@ double getAngle (vector<double> A)
 }
 #endif //LEGACY
 
+/*
+ * vectors a and b are orthogonal if a.b=0
+ * we have 2 degrees of freedom so we choose a
+ * new coordinate st magnitude of the denominator
+ * in the problem is maximized which minimizes error propagation
+ * */
+Point get_orthogonal_vector(double x, double y){
+  if((x == 0) && (y == 0)){
+    fprintf(stderr,"Error get_orthogonal_vector received invalid input %f, %f\n",x,y);
+    exit(1);
+  }
+  int max = abs(y) > abs(x);
+  double nx, ny;
+  if(max){
+    nx = x;
+    ny = (-1 * x * nx) / y;
+  }
+  else{
+    ny = y;
+    nx = (-1 * y * ny) / x;
+  }
+  return Point(nx,ny);
+}
 
 Point::Point(double x, double y) : x(x), y(y) {}
 
@@ -1140,3 +1163,4 @@ double estimateArea (vector<Point> polygon)
     
     return area ;
 }
+
