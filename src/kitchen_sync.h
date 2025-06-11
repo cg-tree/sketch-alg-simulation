@@ -93,15 +93,12 @@ bool CrossPlume (Drone &A, Drone &B, double alpha, PLUME &plume)
     double alphainitial = alpha;
     bool endHere = false;
     
-    int iterate = 1;
+    int iterate = maxiterations;
     
     do{
         endHere = endHere || A.MoveDrone (alpha, epsilon * epsilon, plume, 0);
      //   B.MoveDrone (alpha, epsilon * epsilon, plume, 0);
 
-#ifndef LEGACY
-    fprintf(out,"distance from droneA to source %f\n",get_dist(gaussianCenter[0],A.position));//do we converge?
-#endif
         
         if (PointUtil::orientation(A.last, A.position, start_pos) == PointUtil::CLOCKWISE && alpha > 0)
             orient = false ;
@@ -180,7 +177,7 @@ bool CrossPlume (Drone &A, Drone &B, double alpha, PLUME &plume)
          //   if (abs(A.position.x) > 2 || abs(A.position.y) > 2)
            //     break ;
             ++iter;
-            if (iter > 1)
+            if (iter > maxiterations)
             {
                 cout<<"Iterations exceeding ..."<<endl;
                 print_data(A,B);
@@ -208,15 +205,12 @@ bool CrossCriticalPath(Drone &A, Drone &B, double alpha, criticalPath &cp)
     double alphainitial = alpha;
     bool endHere = false;
     
-    int iterate = 1;
+    int iterate = maxiterations;
     
 
     do{
         A.MoveDrone (alpha, epsilon, cp.diffepsilon, 0);
 
-#ifndef LEGACY
-    fprintf(out,"distance from droneA to source %f\n",get_dist(gaussianCenter[0],A.position));//do we converge?
-#endif
 
         CrossData crossData = cp.getCross(A, B, alpha, epsilon);
         if(crossData.second){
@@ -282,9 +276,6 @@ bool CrossCriticalPath(Drone &A, Drone &B, double alpha, criticalPath &cp)
             if (d1.length() > (epsilon * epsilon) )
             {
                 A.MoveDrone(0, epsilon*epsilon, cp.diffepsilon, 0);
-#ifndef LEGACY
-    fprintf(out,"distance from droneA to source %f\n",get_dist(gaussianCenter[0],A.position));//do we converge?
-#endif
                 CrossData crossData = cp.getCross(A, B, alpha, epsilon);
                 if(crossData.second){
                     vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
@@ -296,9 +287,6 @@ bool CrossCriticalPath(Drone &A, Drone &B, double alpha, criticalPath &cp)
             }
             else{
                 A.MoveDrone(0, d1.length(), cp.diffepsilon, 0);
-#ifndef LEGACY
-    fprintf(out,"distance from droneA to source %f\n",get_dist(gaussianCenter[0],A.position));//do we converge?
-#endif
                 CrossData crossData = cp.getCross(A, B, alpha, epsilon);
                 if(crossData.second){
                     vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
@@ -310,7 +298,7 @@ bool CrossCriticalPath(Drone &A, Drone &B, double alpha, criticalPath &cp)
             }
             
             ++iter;
-            if (iter > 1)
+            if (iter > maxiterations)
             {
                 cout<<"Iterations exceeding ..."<<endl;
                 print_data(A,B);
@@ -335,7 +323,6 @@ void sketch_algorithm ()
     Point startPoint = {(drone_start_A.x + drone_start_B.x) / 2, (drone_start_A.y + drone_start_B.y) / 2};
     double res = epsilon*epsilon; // how much resolution should we calculate contourlines at?
     criticalPath cp(startPoint, epsilon, res);
-        int iter = 0; // delete before push
     
     //lvl 0 
     do{
@@ -350,14 +337,14 @@ void sketch_algorithm ()
         }*/
         /******************************/
 
-        int iter = 0; //uncomment before push
+        int iter = 0;
 
         //lvl 1
         while (( (A.numCross + B.numCross == 0) || (3 == A.side + B.side) ) && (!loopEnd) )
         {
             cout << "inside loop " << iter << endl;
             ++iter;
-            if (iter > 100)
+            if (iter > maxiterations)
             {
                 cout<<"Iterations exceeding ..."<<endl;
                 print_data(A,B); 
@@ -367,9 +354,6 @@ void sketch_algorithm ()
             A.MoveDrone(alpha, epsilon, cp.diffepsilon, 1);
             B.MoveDrone(alpha, epsilon, cp.diffepsilon, 1);
 
-#ifndef LEGACY
-    fprintf(out,"distance from droneA to source %f\n",get_dist(gaussianCenter[0],A.position));//do we converge?
-#endif
 
             loopEnd = loopEnd || cp.foundSource(A, B);
             
@@ -396,11 +380,11 @@ void sketch_algorithm ()
                  * 
                  * nabla is supposed to store the angle of the gradient(scalar)
                  * */
-                fprintf(out,"distance from droneA to source %f\n",get_dist(gaussianCenter[0],A.position));//printf drone tracking
+                fprintf(stderr,"distance from droneA to source %f\n",get_dist(gaussianCenter[0],A.position));//printf drone tracking
                 Point realgrad = Point(gaussianCenter[0].x-A.position.x,
                 gaussianCenter[0].y-A.position.y);
                 Point graderr = Point(realgrad.x - gradient_vec[0], realgrad.y - gradient_vec[1]);
-                fprintf(out,"real grad: %f, %f\n grad_approx: %f, %f\n grad_error: %f,%f\n",
+                fprintf(stderr,"real grad: %f, %f\n grad_approx: %f, %f\n grad_error: %f,%f\n",
                     realgrad.x,realgrad.y,
                     gradient_vec[0], gradient_vec[1],
                     graderr.x, graderr.y);
@@ -409,7 +393,7 @@ void sketch_algorithm ()
                 rgrad.push_back(realgrad.x);
                 rgrad.push_back(realgrad.y);
                 double realgradangle = getAngle(rgrad);
-                fprintf(out,"nabla %f realgrad angle %f\n",
+                fprintf(stderr,"nabla %f realgrad angle %f\n",
                     A.nabla,
                     realgradangle);
                       
@@ -505,6 +489,7 @@ void test_infrastructure()
     drone_start_AB = Point (1 - DIST*epsilon*0.5,-2.38);
    
 #ifndef LEGACY
+    maxiterations = 100;
     num = 1;
     gaussianCenter.push_back(Point(1,1));
     gaussianVar.push_back(Point(1,1));

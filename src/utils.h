@@ -1,13 +1,8 @@
 
 #ifndef LEGACY
 double changeGradient (double angleA, double angleB){
-  int avalid = abs(angleA) < (2*PI);
-  int bvalid = abs(angleB) < (2*PI);
-  switch(avalid + bvalid){
-    case 0:
-      fprintf(stderr,"Error in changeGradient invalid angle with magnitude > 2pi %f, %f\n",
-          angleA, angleB);
-  }
+  assert( abs(angleA) < (2*PI) );
+  assert( abs(angleB) < (2*PI) );
   
   double dangle = angleB-angleA;
   int magnitude = abs(dangle) > (2*PI);
@@ -954,9 +949,11 @@ std::vector<double> compute_curvature_derivative(const std::vector<Point>& path,
 #ifndef LEGACY
 double getAngle (vector<double> A)
 {
-    double normA = sqrt ( (A[0] * A[0]) + (A[1] * A[1]) );
     
     int magnitude = (A[0] != 0) + (A[1] != 0);
+    assert(magnitude>0);
+
+    double normA = sqrt ( (A[0] * A[0]) + (A[1] * A[1]) );
     int max = (A[1]*A[1]) > (A[0]*A[0]);
     
     switch(magnitude){
@@ -969,13 +966,9 @@ double getAngle (vector<double> A)
           case 1://A[0] is 0
             return asin(A[1]/normA); //
         }
-      default:
-      case 0://zero vector
-        fprintf(stderr,"Error in getAngle expected at least one non-zero component got %f %f\n",
-            A[0],A[1]);
-        exit(1);
-        return 0.0; //can't measure angle of zero vector
     }
+    assert(0);//this should never be reached
+    return 0.0; //can't measure angle of zero vector
 }
 #endif //LEGACY
 
@@ -1003,10 +996,8 @@ double getAngle (vector<double> A)
  * in the problem is maximized which minimizes error propagation
  * */
 Point get_orthogonal_vector(double x, double y){
-  if((x == 0) && (y == 0)){
-    fprintf(stderr,"Error get_orthogonal_vector received invalid input %f, %f\n",x,y);
-    exit(1);
-  }
+  int magnitude = (x != 0) + (y != 0);
+  assert(magnitude > 0);
   int max = abs(y) > abs(x);
   double nx, ny;
   if(max){

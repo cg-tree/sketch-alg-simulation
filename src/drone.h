@@ -243,10 +243,7 @@ class Drone {
           angle = getAngle (gradient_vector);
         }
 
-        if( abs(angle) > (2*PI) ){
-          fprintf(stderr, "Error in getAngle received invalid angle %f", angle);
-          exit(1);
-        }
+        assert(abs(angle) < (2*PI) );
 
         cout << "angle: " << angle << endl;
 
