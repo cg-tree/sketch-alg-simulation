@@ -36,6 +36,28 @@ struct criticalPath{
         }
     }
 
+    double levelAt(const Point &p) const {
+        return getGaussian(p);
+    }
+
+    /// Compute (and store) the contour around point p and return its number of points
+    int currentContourSize(const Point &p) {
+        // 1) Evaluate the field at p
+        double lvl = getGaussian(p);
+
+        // 2) Rebuild the contour at that level, within ±DIST*diffepsilon of p
+        localContour = getGaussianContours(
+            lvl,
+            contourRes,
+            p.x - DIST * diffepsilon,
+            p.x + DIST * diffepsilon,
+            p.y - DIST * diffepsilon,
+            p.y + DIST * diffepsilon
+        );
+
+        // 3) Return how many sample‐points we got
+        return static_cast<int>(localContour.size());
+    }
 
     vector<Point> getCriticalPathPoints() {
         std::sort(criticalPathPoints.begin(), criticalPathPoints.end()); 
