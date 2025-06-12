@@ -18,41 +18,41 @@ struct criticalPath{
     vector<Point> localContour;
     /* end modified def*/
 
-    criticalPath(Point start, double epsilon, double res)
-    : stcriticalPoint(start), diffepsilon(epsilon), contourRes(res) {
+    criticalPath(Param* p, Point start, double epsilon, double res)
+    : stcriticalPoint(start), diffepsilon(p->epsilon), contourRes(res) {
         // Initialize the critical path by finding the first critical point
-        double level = getGaussian(start);
-        vector<Point> initialContour = getGaussianContours(level, 
+        double level = getGaussian(p, start);
+        vector<Point> initialContour = getGaussianContours(p, level, 
                                                            contourRes, 
-                                                           start.x - DIST * epsilon, 
-                                                           start.x + DIST * epsilon, 
-                                                           start.y - DIST * epsilon, 
-                                                           start.y + DIST * epsilon);
+                                                           start.x - p->DIST * p->epsilon, 
+                                                           start.x + p->DIST * p->epsilon, 
+                                                           start.y - p->DIST * p->epsilon, 
+                                                           start.y + p->DIST * p->epsilon);
         if (!initialContour.empty()) {
-            Point firstCriticalPoint = getCriticalPoint(initialContour);
+            Point firstCriticalPoint = getCriticalPoint(p, initialContour);
             criticalPathPoints.push_back(firstCriticalPoint);
         } else {
             std::cerr << "Failed to initialize critical path: no contour points found." << std::endl;
         }
     }
 
-    double levelAt(const Point &p) const {
-        return getGaussian(p);
+    double levelAt(Param* p, const Point &pt) const {
+        return getGaussian(p, pt);
     }
 
     /// Compute (and store) the contour around point p and return its number of points
-    int currentContourSize(const Point &p) {
+    int currentContourSize(Param* p, const Point &pt) {
         // 1) Evaluate the field at p
-        double lvl = getGaussian(p);
+        double lvl = getGaussian(p, pt);
 
-        // 2) Rebuild the contour at that level, within ±DIST*diffepsilon of p
-        localContour = getGaussianContours(
+        // 2) Rebuild the contour at that level, within ±p->DIST*diffepsilon of p
+        localContour = getGaussianContours(p,
             lvl,
             contourRes,
-            p.x - DIST * diffepsilon,
-            p.x + DIST * diffepsilon,
-            p.y - DIST * diffepsilon,
-            p.y + DIST * diffepsilon
+            pt.x - p->DIST * diffepsilon,
+            pt.x + p->DIST * diffepsilon,
+            pt.y - p->DIST * diffepsilon,
+            pt.y + p->DIST * diffepsilon
         );
 
         // 3) Return how many sample‐points we got
@@ -131,7 +131,7 @@ struct criticalPath{
     // that the drone is currently at. We need both positions because
     // we want the tangent vector to be oriented in the direction of the
     // critical point.
-    vector<double> getContourTangent(Point A, Point B){
+    vector<double> getContourTangent(Param* p, Point A, Point B){
         Point current = A;
         vector<Point> surroundingPoints;
         for (int i = -1; i <= 1; i++) {
@@ -144,23 +144,23 @@ struct criticalPath{
             }
         }
 
-        vector<double> gradient = concentration_gradient_LSQ(surroundingPoints, current);
+        vector<double> gradient = concentration_gradient_LSQ(p, surroundingPoints, current);
 
         double centerX = (A.x + B.x) * 0.5;
         double centerY = (A.y + B.y) * 0.5;
-        double level = getGaussian(current);
+        double level = getGaussian(p, current);
         //cout << "level: " << level << endl;
         //cout << "contour res:" <<  contourRes << endl;
-        vector<Point> localContour = getGaussianContours(level, 
+        vector<Point> localContour = getGaussianContours(p, level, 
             contourRes, 
-            centerX - 1*DIST*epsilon, // multiplier here may change based
-            centerX + 1*DIST*epsilon, // on assumption 1.
-            centerY - 1*DIST*epsilon, 
-            centerY + 1*DIST*epsilon); 
+            centerX - 1*p->DIST*p->epsilon, // multiplier here may change based
+            centerX + 1*p->DIST*p->epsilon, // on assumption 1.
+            centerY - 1*p->DIST*p->epsilon, 
+            centerY + 1*p->DIST*p->epsilon); 
 
         //cout << "size of local contour: " << localContour.size() << endl;
 
-        Point criticalPoint = getCriticalPoint(localContour);
+        Point criticalPoint = getCriticalPoint(p, localContour);
         //cout << "critical point: " << criticalPoint.x << " " << criticalPoint.y << endl;
 
             vector<double> r = {criticalPoint.x - current.x, criticalPoint.y - current.y};
@@ -192,7 +192,7 @@ struct criticalPath{
     }
 
 
-    std::pair<int,int> checkCross (Drone& droneA, Drone& droneB, Point motion)
+    std::pair<int,int> checkCross(Param* p, Drone& droneA, Drone& droneB, Point motion)
     {
         // Need to get the gradient around the initial point
         // and the end point in order to compare sign of 
@@ -203,8 +203,8 @@ struct criticalPath{
   
 
         //get tangent vector, which is normal to the gradient vector
-        vector<double> tangentA = getContourTangent(droneA.position + motion, droneB.position + motion);
-        vector<double> tangentB = getContourTangent(droneB.position + motion, droneA.position + motion);
+        vector<double> tangentA = getContourTangent(p, droneA.position + motion, droneB.position + motion);
+        vector<double> tangentB = getContourTangent(p, droneB.position + motion, droneA.position + motion);
 
         droneA.currentTangent = tangentA;
         droneB.currentTangent  = tangentB;
@@ -259,7 +259,7 @@ struct criticalPath{
 
     }
 
-    Point getCriticalPoint(vector<Point>& localContour)
+    Point getCriticalPoint(Param* p, vector<Point>& localContour)
     {
         lastCPCurvatures.clear();
 
@@ -273,7 +273,7 @@ struct criticalPath{
                 }
             }
 
-            double curvature = calc_curvature_LSQ(surroundingPoints, point); 
+            double curvature = calc_curvature_LSQ(p, surroundingPoints, point); 
             lastCPCurvatures.push_back(curvature);
         }
 
@@ -312,11 +312,11 @@ struct criticalPath{
         return criticalPoint;
     }
 
-    Point getCrossingPoint(Drone droneA, Drone droneB){
+    Point getCrossingPoint(Param* p, Drone droneA, Drone droneB){
         // Note that Drone A is the drone we are determining
         // the crossing point for 
-        double startLevel = getGaussian(droneA.position);
-        double endLevel = getGaussian(droneA.last);
+        double startLevel = getGaussian(p, droneA.position);
+        double endLevel = getGaussian(p, droneA.last);
         cout << "getCrossingPoint() |  start level: " << startLevel << "   end level: " << endLevel << endl;
 
         // used to look for point that minimizes the curvature
@@ -342,23 +342,23 @@ struct criticalPath{
             double endCenterX = (droneA.last.x + droneB.last.x) * 0.5;
             double endCenterY = (droneA.last.y + droneB.last.y) * 0.5;
             
-            vector<Point> localContourStart = getGaussianContours(startLevel, 
+            vector<Point> localContourStart = getGaussianContours(p, startLevel, 
                                                              contourRes, 
-                                                             startCenterX - 1*DIST*epsilon, 
-                                                             startCenterX + 1*DIST*epsilon, 
-                                                             startCenterY - 1*DIST*epsilon, 
-                                                             startCenterY + 1*DIST*epsilon); 
+                                                             startCenterX - 1*p->DIST*p->epsilon, 
+                                                             startCenterX + 1*p->DIST*p->epsilon, 
+                                                             startCenterY - 1*p->DIST*p->epsilon, 
+                                                             startCenterY + 1*p->DIST*p->epsilon); 
 
-            vector<Point> localContourEnd = getGaussianContours(endLevel,
+            vector<Point> localContourEnd = getGaussianContours(p, endLevel,
                                                                 contourRes,
-                                                                endCenterX - 1*DIST*epsilon,
-                                                                endCenterX + 1*DIST*epsilon,
-                                                                endCenterY - 1*DIST*epsilon,
-                                                                endCenterY + 1*DIST*epsilon);
+                                                                endCenterX - 1*p->DIST*p->epsilon,
+                                                                endCenterX + 1*p->DIST*p->epsilon,
+                                                                endCenterY - 1*p->DIST*p->epsilon,
+                                                                endCenterY + 1*p->DIST*p->epsilon);
          
             // critical path is path between two critical points                                                      
-            Point criticalPointStart = getCriticalPoint(localContourStart);
-            Point criticalPointEnd = getCriticalPoint(localContourEnd);
+            Point criticalPointStart = getCriticalPoint(p, localContourStart);
+            Point criticalPointEnd = getCriticalPoint(p, localContourEnd);
 
             criticalPathPoints.push_back(criticalPointStart);
             criticalPathPoints.push_back(criticalPointEnd);
@@ -390,14 +390,14 @@ struct criticalPath{
         }else{
             // we consider this to be a single contour
             // and will need to evaluate where the critical point is
-            vector<Point> localContour = getGaussianContours(startLevel, 
+            vector<Point> localContour = getGaussianContours(p, startLevel, 
                                                              0.01, 
-                                                             startCenterX - 1*DIST*epsilon,
-                                                             startCenterX + 1*DIST*epsilon,
-                                                             startCenterY - 1*DIST*epsilon,  
-                                                             startCenterY + 1*DIST*epsilon);
+                                                             startCenterX - 1*p->DIST*p->epsilon,
+                                                             startCenterX + 1*p->DIST*p->epsilon,
+                                                             startCenterY - 1*p->DIST*p->epsilon,  
+                                                             startCenterY + 1*p->DIST*p->epsilon);
 
-            Point criticalPoint = getCriticalPoint(localContour);
+            Point criticalPoint = getCriticalPoint(p, localContour);
             criticalPathPoints.push_back(criticalPoint);
             return criticalPoint;
 
@@ -405,15 +405,15 @@ struct criticalPath{
         
     }
     
-    CrossData getCross (Drone& droneA, Drone& droneB, double alpha, double dist)
+    CrossData getCross(Param* p, Drone& droneA, Drone& droneB, double alpha, double dist)
     {
     
-       Point motion = PointUtil::vector(droneA.nabla + alpha, dist/100);
+       Point motion = PointUtil::vector(droneA.nabla + p->alpha, dist/100);
        cout << "Motion:  X = " << motion.x << "   Y = " << motion.y << "      ";
        
        for(int i = 0; i < 100; i++){
 
-            std::pair<int,int> crossInfo = checkCross(droneA, droneB, motion);
+            std::pair<int,int> crossInfo = checkCross(p, droneA, droneB, motion);
     
             //cout << "cross info" << crossInfo.first << ", " << crossInfo.second << endl;  
 
@@ -421,25 +421,25 @@ struct criticalPath{
             if(crossInfo.first != LEFT) // location of drone A
             {
                 
-                crossPoint = getCrossingPoint(droneA, droneB);
+                crossPoint = getCrossingPoint(p, droneA, droneB);
                 droneA.numCross++;
                 droneA.side = RIGHT;
 
-                return CrossData (crossPoint, 1);
+                return CrossData(crossPoint, 1);
 
             }else if(crossInfo.second != RIGHT){
                 
                 
-                crossPoint = getCrossingPoint(droneB, droneA);
+                crossPoint = getCrossingPoint(p, droneB, droneA);
                 droneB.numCross++;
                 droneB.side = LEFT;
                    
-                return CrossData (crossPoint, 2);
+                return CrossData(crossPoint, 2);
             }
             motion += motion;
        }
        
-       return CrossData ( Point (0,0), 0 );
+       return CrossData( Point (0,0), 0 );
    }
 
    // FIX ME: We know that a drone has encountered a source when 

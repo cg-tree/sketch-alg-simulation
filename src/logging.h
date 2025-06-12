@@ -125,24 +125,24 @@ static void printEpochSummary(
 }
 
 // This function performs all the printing (cout) logic for test_infrastructure() initialization
-void print_test_infrastructure_info() {
+void print_test_infrastructure_info(Param* p) {
     std::cout << "Initializing test... " << std::endl;
-    std::cout << "Epsilon " << epsilon << std::endl;
-    std::cout << "Initial direction " << alpha << std::endl;
-    std::cout << "Number of Gaussians " << num << std::endl;
-    std::cout << "Least difference between starting and end point " << INF << std::endl;
-    std::cout << "Minimum crossings before checking termination " << CROSSBOUND << std::endl;
+    std::cout << "Epsilon " << p->epsilon << std::endl;
+    std::cout << "Initial direction " << p->alpha << std::endl;
+    std::cout << "Number of Gaussians " << p->num << std::endl;
+    std::cout << "Least difference between starting and end point " << p->INF << std::endl;
+    std::cout << "Minimum crossings before checking termination " << p->CROSSBOUND << std::endl;
     std::cout << "Minimum distance factor between drones and minimum distance "
-              << DIST << " " << (DIST * epsilon) << std::endl;
-    std::cout << "Concentration THRESHOLD " << THRESHOLD << std::endl;
+              << p->DIST << " " << (p->DIST * p->epsilon) << std::endl;
+    std::cout << "Concentration p->THRESHOLD " << p->THRESHOLD << std::endl;
     std::cout << "Drone A starting point " 
-              << drone_start_A.x << " " << drone_start_B.y << std::endl;
+              << p->drone_start_A.x << " " << p->drone_start_B.y << std::endl;
     std::cout << "Drone B starting point " 
-              << drone_start_B.x << " " << drone_start_A.y << std::endl;
+              << p->drone_start_B.x << " " << p->drone_start_A.y << std::endl;
     std::cout << "Centers of gaussians " << std::endl;
     
-    for (int i = 0; i < num; ++i) {
-        std::cout << gaussianCenter[i].x << " " << gaussianCenter[i].y << std::endl;
+    for (int i = 0; i < p->num; ++i) {
+        std::cout << p->gaussianCenter[i].x << " " << p->gaussianCenter[i].y << std::endl;
     }
 }
 

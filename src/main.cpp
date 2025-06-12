@@ -16,22 +16,30 @@ using namespace std;
 
 #include "point.h"
 #include "line.h"
-
+#include "param.h"
 #include "global.h"
+
+
 #include "utils.h"
-
-
 #include "ellipse.h"
 #include "plume.h"
 #include "drone.h"
 #include "logging.h"
+#include "logging.h"
 #include "cubicspline.h"
 #include "criticalpath.h"
-
 #include "kitchen_sync.h"
+
+
 
 int main()
 {
+  Param p;
+
+#ifndef LEGACY
+  sketch_algorithm(&p);
+#endif //LEGACY
+#ifdef LEGACY
     int i = 0;
     // 0.005 originally
     // for testing purposes making this larger and looping only once
@@ -70,6 +78,7 @@ int main()
     
     cout << endl;
     
+#endif //LEGACY
     return 0;
 }
 

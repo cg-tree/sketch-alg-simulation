@@ -1,21 +1,10 @@
 
-
 #include "point.h"
 
+typedef struct Param_s{
 default_random_engine generator;
 
-typedef pair<Point, int> CrossData;
-typedef pair<double, double> Pair;
-
-const double PI = 3.14159;
-#ifndef LEGACY
-Param param;
-
-#endif // LEGACY
-#ifdef LEGACY
-normal_distribution<double> distribution (0, 0.1);
-
-int maxiterations=10;
+int maxiterations=100;
 int num = 2;
 int CROSSBOUND = 100;
 double majorAxis = 0.75;
@@ -36,5 +25,4 @@ vector<Point> gaussianVar;
 
 
 int currentGaussian1;
-#endif // LEGACY
-
+} Param;
