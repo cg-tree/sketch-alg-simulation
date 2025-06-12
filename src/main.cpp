@@ -19,18 +19,7 @@ using namespace std;
 #include "param.h"
 #include "global.h"
 
-#ifndef LEGACY
-#include "utils2.h"
-#include "logging2.h"
-#include "ellipse.h"
-#include "plume2.h"
-#include "drone2.h"
-#include "cubicspline.h"
-#include "criticalpath2.h"
-#include "kitchen_sync2.h"
-#endif //LEGACY
 
-#ifdef LEGACY
 #include "utils.h"
 #include "logging.h"
 #include "ellipse.h"
@@ -39,7 +28,6 @@ using namespace std;
 #include "cubicspline.h"
 #include "criticalpath.h"
 #include "kitchen_sync.h"
-#endif //LEGACY
 
 
 

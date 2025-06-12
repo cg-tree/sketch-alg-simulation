@@ -1,6 +1,6 @@
 
 #ifndef LEGACY
-double changeGradient (double angleA, double angleB){
+double changeGradient(double angleA, double angleB){
   assert( abs(angleA) < (2*PI) );
   assert( abs(angleB) < (2*PI) );
   
@@ -16,14 +16,14 @@ double changeGradient (double angleA, double angleB){
 //when computing successive rotations of the gradient
 
 #ifdef LEGACY
-double changeGradient (double angleA, double angleB)
+double changeGradient(double angleA, double angleB)
 {
   //-theta = 2pi - theta
-    return abs (angleA - angleB); //check this again for bug.
+    return abs(angleA - angleB); //check this again for bug.
 }
 #endif //LEGACY
 
-void reverse (double &gradient)
+void reverse(double &gradient)
 {
     if (gradient < 0)
         gradient = gradient + PI;
@@ -35,9 +35,9 @@ void reverse (double &gradient)
 }
 
 
-int checkin (Point P){
-    double A = majorAxis;
-    double B = minorAxis;
+int checkin(Param* p, Point P){
+    double A = p->majorAxis;
+    double B = p->minorAxis;
     return (((P.x * P.x) / (A * A) + (P.y * P.y) / (B*B))  <= 1);
 }
 
@@ -132,7 +132,7 @@ double inner_product(vector<double> vec)
     return prod (transpose(vec), vec)[0];
 }
 
-vector<double> get_gradient (vector<vector<double> > A, vector<double> x, vector<double> b)
+vector<double> get_gradient(vector<vector<double> > A, vector<double> x, vector<double> b)
 {
     vector<double> gradient;
     int m = A.size();
@@ -163,8 +163,8 @@ vector<double> gradient_descent_convex(int id, vector<vector<double> > A, vector
     vector<double> eta;
     eta.push_back (PI/1000);
     double val ;
-  //  x.push_back (-2*(points[1].x-gaussianCenter[id].x) * fval[1]);
-  //  x.push_back (-2*(points[1].y-gaussianCenter[id].y) * fval[1]);
+  //  x.push_back (-2*(points[1].x-p->gaussianCenter[id].x) * fval[1]);
+  //  x.push_back (-2*(points[1].y-p->gaussianCenter[id].y) * fval[1]);
    // double norm = sqrt (x[0] * x[0] + x[1]*x[1]);
    // x[0]/=norm; x[1]/=norm;
     
@@ -195,36 +195,36 @@ vector<double> gradient_descent_convex(int id, vector<vector<double> > A, vector
     return z;
 }
 
-double gaussian (Point input, int gaussianId)
+double gaussian(Param* p, Point input, int gaussianId)
 {
-    double X = input.x - gaussianCenter[gaussianId].x;
-    double Y = input.y - gaussianCenter[gaussianId].y;
-    double varX = gaussianVar[gaussianId].x;
-    double varY = gaussianVar[gaussianId].y;
-    return exp ( - (X * X / (2*varX)) - (Y * Y/(2*varY)));
+    double X = input.x - p->gaussianCenter[gaussianId].x;
+    double Y = input.y - p->gaussianCenter[gaussianId].y;
+    double varX = p->gaussianVar[gaussianId].x;
+    double varY = p->gaussianVar[gaussianId].y;
+    return exp( - (X * X / (2*varX)) - (Y * Y/(2*varY)));
 }
 
-vector<double> getGaussian (vector<Point> points)
+vector<double> getGaussian(Param* p, vector<Point> points)
 {
     vector<double> fval;
     
     for (int i = 0; i < points.size(); i ++)
     {
         double sum = 0;
-        for (int j = 0; j < gaussianCenter.size(); j++)
-            sum = sum + gaussian (points[i], j);
+        for (int j = 0; j < p->gaussianCenter.size(); j++)
+            sum = sum + gaussian(p, points[i], j);
         fval.push_back (sum);
     }
     
     return fval;
 }
 
-double getGaussian (Point point)
+double getGaussian(Param* p, Point point)
 {
     double fval;
     double sum = 0;
-    for (int j = 0; j < gaussianCenter.size(); j++){
-        sum = sum + gaussian (point, j);
+    for (int j = 0; j < p->gaussianCenter.size(); j++){
+        sum = sum + gaussian(p, point, j);
     } 
     fval = sum;
     return fval;
@@ -248,7 +248,8 @@ vector<Point> removeDuplicatePoints(vector<Point>& points, double eps = 1e-9) {
 // This uses marching squares to get the contours/level sets
 // https://en.wikipedia.org/wiki/Marching_squares
 // https://www.baeldung.com/cs/marching-squares
-vector<Point> getGaussianContours(double level,
+vector<Point> getGaussianContours(Param* p,
+                                  double level,
                                   double stepSize,
                                   double xMin,
                                   double xMax,
@@ -265,10 +266,10 @@ vector<Point> getGaussianContours(double level,
             Point p3(x, y + stepSize);
             Point p4(x + stepSize, y + stepSize);
 
-            double f1 = getGaussian(p1);
-            double f2 = getGaussian(p2);
-            double f3 = getGaussian(p3);
-            double f4 = getGaussian(p4);
+            double f1 = getGaussian(p, p1);
+            double f2 = getGaussian(p, p2);
+            double f3 = getGaussian(p, p3);
+            double f4 = getGaussian(p, p4);
 
             // Check if the level set crosses the grid cell
             if ((f1 > level && f2 > level && f3 > level && f4 > level) ||
@@ -362,18 +363,18 @@ vector<Point> getGaussianContours(double level,
 }
 
 //what's this supposed to do?
-vector<double> get_Gaussian_vector (vector<Point> points, int id)
+vector<double> get_Gaussian_vector(Param* p, vector<Point> points, int id)
 {
     vector<double> x;
-    vector<double> fval = getGaussian (points);
+    vector<double> fval = getGaussian(p, points);
     //below is buggy, does not incorporate variance
-    x.push_back (-2*(points[1].x-gaussianCenter[id].x) * fval[1]);
-    x.push_back (-2*(points[1].y-gaussianCenter[id].y) * fval[1]);
+    x.push_back (-2*(points[1].x-p->gaussianCenter[id].x) * fval[1]);
+    x.push_back (-2*(points[1].y-p->gaussianCenter[id].y) * fval[1]);
     return x;
 }
 
 //this looks wrong...
-double gradient_modulo (double gradient)
+double gradient_modulo(double gradient)
 {
     if (gradient > PI)
         gradient = gradient - 2*PI;
@@ -637,9 +638,9 @@ vector<double> gradient_matrix_solver (vector<vector<double> > A, vector<double>
     return gradient;
 }
 
-vector<double> gradient_LSQ (vector<Point> points)
+vector<double> gradient_LSQ(Param* p, vector<Point> points)
 {
-    vector<double> fval = getGaussian (points);
+    vector<double> fval = getGaussian(p, points);
     vector<vector<double> > A;
     vector<double> b;
     
@@ -714,6 +715,7 @@ std::vector<double> curvature_gradient_LSQ(
 
 
 std::vector<double> concentration_gradient_LSQ(
+    Param* p,
     std::vector<Point> surroundingPoints,
     Point& pointToSolve) {
 
@@ -726,7 +728,7 @@ std::vector<double> concentration_gradient_LSQ(
     // Extract the coordinates and Gaussian values for the surrounding points
     double xB = pointToSolve.x;
     double yB = pointToSolve.y;
-    double fb = getGaussian(pointToSolve);
+    double fb = getGaussian(p, pointToSolve);
     // cout << "concentration at pts: " << fb << endl;
 
     std::vector<std::vector<double>> A;
@@ -735,7 +737,7 @@ std::vector<double> concentration_gradient_LSQ(
     for (auto& point : surroundingPoints) {
         double x = point.x;
         double y = point.y;
-        double f = getGaussian(point);
+        double f = getGaussian(p, point);
         // cout << "concentration at surps " << f << endl;
 
         // Build the rows of matrix A and vector b
@@ -755,6 +757,7 @@ std::vector<double> concentration_gradient_LSQ(
 // more details about this in the Contour Estimation with Drones
 // overleaf document
 std::vector<std::vector<double>> hessian_LSQ(
+    Param* p,
     std::vector<Point> surroundingPoints,
     Point& pointToSolve,
     std::vector<double>& gradientAtPoint) {
@@ -763,7 +766,7 @@ std::vector<std::vector<double>> hessian_LSQ(
     double yE = pointToSolve.y;
     double fxe = gradientAtPoint[0];
     double fye = gradientAtPoint[1];
-    double fe = getGaussian(pointToSolve);
+    double fe = getGaussian(p, pointToSolve);
 
     if (surroundingPoints.size() < 3) {
         std::cerr << "Insufficient points for gradient calculation." << std::endl;
@@ -777,7 +780,7 @@ std::vector<std::vector<double>> hessian_LSQ(
     for (size_t i = 0; i < surroundingPoints.size(); ++i) {
         double x = surroundingPoints[i].x;
         double y = surroundingPoints[i].y;
-        double f = getGaussian(surroundingPoints[i]); 
+        double f = getGaussian(p, surroundingPoints[i]); 
 
         A[i][0] = 0.5 * std::pow(x - xE, 2); 
         A[i][1] = (x - xE) * (y - yE);
@@ -825,15 +828,16 @@ double calc_curvature(std::vector<double>& g,
 // The calc_curvature_LSQ function is a wrapper that calculates 
 // the curvature at a point using LSQ.
 double calc_curvature_LSQ(
+    Param* p,
     std::vector<Point> surroundingPoints,
     Point& pointToSolve)
 {
     // Calculate the gradient at pointB using three points.
-    std::vector<double> gradB = concentration_gradient_LSQ(surroundingPoints, pointToSolve); 
+    std::vector<double> gradB = concentration_gradient_LSQ(p, surroundingPoints, pointToSolve); 
 
  
     // Calculate the Hessian using nine points, the computed gradient, and the concentration function.
-    std::vector<std::vector<double>> H = hessian_LSQ(surroundingPoints, 
+    std::vector<std::vector<double>> H = hessian_LSQ(p, surroundingPoints, 
                                                      pointToSolve, gradB);
 
  
@@ -947,7 +951,7 @@ std::vector<double> compute_curvature_derivative(const std::vector<Point>& path,
 
 
 #ifndef LEGACY
-double getAngle (vector<double> A)
+double getAngle(vector<double> A)
 {
     
     int magnitude = (A[0] != 0) + (A[1] != 0);
@@ -974,7 +978,7 @@ double getAngle (vector<double> A)
 
 #ifdef LEGACY
 //previous implementation
-double getAngle (vector<double> A)
+double getAngle(vector<double> A)
 {
     double normA = sqrt (A[0] * A[0] + A[1] * A[1]);
     double angle = acos (abs(A[0])/normA);
@@ -1134,18 +1138,18 @@ Point* LineSegment::getEndPtr() {
 // }
 /*************************************************************/
 
-string check (Point P){
-    double A = majorAxis;
-    double B = minorAxis;
+string check(Param* p, Point P){
+    double A = p->majorAxis;
+    double B = p->minorAxis;
     return (((P.x * P.x) / (A * A) + (P.y * P.y) / (B*B))  <= 1) ? "Inside " : "Outside ";
 }
 
 /***************************************************/
 
-double estimateArea (vector<Point> polygon)
+double estimateArea(vector<Point> polygon)
 {
     double area = 0 ;
-    int n = polygon.size ();
+    int n = polygon.size();
     
     for (int i = 0;i < n; i ++)
         area += polygon[i].x * polygon [(i+1)%n].y - polygon[i].y* polygon[(i+1)%n].x;

@@ -52,17 +52,17 @@ class Drone {
         side(side) {}
     
     //this appears to be a broken implementation of this function but we need it to compile
-    bool MoveDrone (double alpha, double dist, PLUME &plume, int callSource)
+    bool MoveDrone(Param* p, double alpha, double dist, PLUME &plume, int callSource)
     {
         Point nextPosition;
         vector<Point> points;
-        points.push_back (position);
+        points.push_back(position);
         
-        motion = PointUtil::vector (nabla + alpha, dist);
+        motion = PointUtil::vector(nabla + p->alpha, dist);
         nextPosition = position + motion;
         
-        points.push_back (nextPosition);
-        LineSegment dronemotion = LineSegment (position, nextPosition);
+        points.push_back(nextPosition);
+        LineSegment dronemotion = LineSegment(position, nextPosition);
         
         distTraversed += dist;
         
@@ -70,13 +70,13 @@ class Drone {
             cout << "position exception! "<<endl;
         
        // bool cross = plume.crossesEdge (dronemotion);
-        CrossData cd = plume.getCross (dronemotion, nabla, alpha, dist, inside);
-      //  CrossData cd = plume.getCross (dronemotion);
+        CrossData cd = plume.getCross(p, dronemotion, nabla, p->alpha, dist, inside);
+      //  CrossData cd = plume.getCross(p, dronemotion);
         Point crossingPoint = cd.first;
         
-        points.push_back (crossingPoint);
+        points.push_back(crossingPoint);
         
-        swap (points[1], points[2]);
+        swap(points[1], points[2]);
         int cross = cd.second; //changed to boolean if 1 then crossed, 0 did not cross.
      //   if (abs(crossingPoint.x) > 1e-9 || abs (crossingPoint.y) > 1e-9)
        //     cross = 1;
@@ -86,26 +86,26 @@ class Drone {
         {
             ++numCross;
             inside = inside ^ 1;
-           // if (abs(alpha) > epsilon)
-             //   cout<<"Testing alpha " << inside<<endl;
+           // if (abs(p->alpha) > p->epsilon)
+             //   cout<<"Testing p->alpha " << inside<<endl;
             vector<double> gradient_vector;
             
           //  if (cd.second != currentGaussian1)
             //    gradient_vector = get_Gaussian_vector( points, cd.second);
            // else
-                gradient_vector = gradient_LSQ (points);
+                gradient_vector = gradient_LSQ(p, points);
             
        //     last_gradient = gradient_vector;
-       //     Point gradient_shift = PointUtil::vector (1.0/100,1);
+       //     Point gradient_shift = PointUtil::vector(1.0/100,1);
        //     last_gradient[0] += gradient_shift.x;
        //     last_gradient[1] += gradient_shift.y;
-            double angle = getAngle (gradient_vector);
+            double angle = getAngle(gradient_vector);
 
             
            // if (!callSource)
              //   cout<<"Called from CrossPlume "<<endl;
             
-            angle = gradient_modulo (angle);
+            angle = gradient_modulo(angle);
             if (droneIn)
             {
           //      cout<<gradient_vector[0]<<" "<<gradient_vector[1] << " gradient vector,Points "<<crossingPoint.x<<" "<<crossingPoint.y<<endl;
@@ -113,9 +113,9 @@ class Drone {
             }
             double gradient = angle + PI/2 ;
        //     cout<<angle<<" angle "<<points.size()<<" "<<gradient<< endl;
-            gradient = gradient_modulo (gradient);
+            gradient = gradient_modulo(gradient);
             
-            Point checkPoint = PointUtil::vector (gradient, dist);
+            Point checkPoint = PointUtil::vector(gradient, dist);
            
       //      cout<<"Checkpoint "<<checkPoint.x<<" "<<checkPoint.y<<endl;
 
@@ -139,7 +139,7 @@ class Drone {
             if (PointUtil::orientation (position, crossingPoint, checkPoint) != orient)
                 reverse (gradient);
 
-            angleTurned += changeGradient (nabla + alpha, gradient);
+            angleTurned += changeGradient(nabla + p->alpha, gradient);
             nabla = gradient;
             
         //    if (droneIn && !inside)
@@ -161,24 +161,24 @@ class Drone {
             Point currtoinit = polytope.back() - polytope[0];
             
             
-            return (currtoinit.length() < INF) && (numCross > CROSSBOUND);
+            return (currtoinit.length() < p->INF) && (numCross > p->CROSSBOUND);
         }
         else
             return false ;
     }
 
     // Fixed implementation
-    void MoveDrone (double alpha, double dist, 
+    void MoveDrone(Param* p, double alpha, double dist, 
                                     double diffepsilon, int callSource)
     {
         Point nextPosition;
     
         // Calculate motion vector and next position
-        motion = PointUtil::vector (nabla + alpha, dist);
+        motion = PointUtil::vector(nabla + p->alpha, dist);
         nextPosition = position + motion;
         
         // points.push_back (nextPosition);
-        currPath = LineSegment (position, nextPosition);
+        currPath = LineSegment(position, nextPosition);
         
         // Update distance traversed
         distTraversed += dist;
@@ -205,7 +205,7 @@ class Drone {
             }
         }
 
-        vector<double> gradient = concentration_gradient_LSQ(surroundingPoints, position);
+        vector<double> gradient = concentration_gradient_LSQ(p, surroundingPoints, position);
         // cout << "gradient size : " << gradient.size() << endl;
         // for(int i = 0; i < gradient.size(); i++){
         //     cout << "gradient: [" << i << "] " << gradient[i] << endl;
@@ -225,7 +225,7 @@ class Drone {
                 }
             }
 
-            lastContourGradient = concentration_gradient_LSQ(surroundingPointsLast, last); 
+            lastContourGradient = concentration_gradient_LSQ(p, surroundingPointsLast, last); 
         }
         currentContourGradient = gradient;
 
@@ -234,13 +234,13 @@ class Drone {
 
 #ifndef LEGACY
     
-    void LearnGradient(double alpha, double dist, Point crossingPoint, Drone &otherDrone, vector<double> gradient_vector) {
+    void LearnGradient(Param* p, double alpha, double dist, Point crossingPoint, Drone &otherDrone, vector<double> gradient_vector) {
         //cout << "Learning gradient for drone pair" << endl;
         
         //cout << "gradient vector: " << gradient_vector[0] << " " << gradient_vector[1] << endl;
         double angle = 0;
         if( ( gradient_vector[0] != 0 ) || ( gradient_vector[1] != 0 ) ){
-          angle = getAngle (gradient_vector);
+          angle = getAngle(gradient_vector);
         }
 
         assert(abs(angle) < (2*PI) );
@@ -249,8 +249,8 @@ class Drone {
 
         //double gradient = angle + PI/2 ;
         double gradient = angle;
-        gradient = gradient_modulo (gradient);
-        Point checkPoint = PointUtil::vector (gradient, dist);
+        gradient = gradient_modulo(gradient);
+        Point checkPoint = PointUtil::vector(gradient, dist);
         checkPoint = crossingPoint + checkPoint;
         /* 
         // FIX ME: double check this
@@ -266,7 +266,7 @@ class Drone {
 
         */
 
-        angleTurned += changeGradient(nabla + alpha, gradient);
+        angleTurned += changeGradient(nabla + p->alpha, gradient);
         nabla = gradient;
             
     }
@@ -277,20 +277,20 @@ class Drone {
 #ifdef LEGACY
     // This function is called when the drones cross the critical path
     // and need to learn the gradient (update nabla)
-    void LearnGradient(double alpha, double dist, Point crossingPoint, Drone &otherDrone, vector<double> gradient_vector) {
+    void LearnGradient(Param* p, double alpha, double dist, Point crossingPoint, Drone &otherDrone, vector<double> gradient_vector) {
         cout << "Learning gradient for drone pair" << endl;
         
         cout << "gradient vector: " << gradient_vector[0] << " " << gradient_vector[1] << endl;
 
-        double angle = getAngle (gradient_vector);
+        double angle = getAngle(gradient_vector);
 
 
-        angle = gradient_modulo (angle);
+        angle = gradient_modulo(angle);
         cout << "angle: " << angle << endl;
 
         double gradient = angle + PI/2 ;
-        gradient = gradient_modulo (gradient);
-        Point checkPoint = PointUtil::vector (gradient, dist);
+        gradient = gradient_modulo(gradient);
+        Point checkPoint = PointUtil::vector(gradient, dist);
         checkPoint = crossingPoint + checkPoint;
                 
         // FIX ME: double check this
@@ -301,10 +301,10 @@ class Drone {
             orient = PointUtil::COUNTERCLOCKWISE;
         
         Point curr =  position;
-        if (PointUtil::orientation (curr, crossingPoint, checkPoint) != orient)
+        if (PointUtil::orientation(curr, crossingPoint, checkPoint) != orient)
             reverse (gradient);
 
-        angleTurned += changeGradient(nabla + alpha, gradient);
+        angleTurned += changeGradient(nabla + p->alpha, gradient);
         nabla = gradient;
             
     }
