@@ -57,10 +57,10 @@ void Sync (Drone &A, Drone &B, double alpha, double dist, criticalPath &cp)
 
 void print_data(Drone A, Drone B)
 {
-    cout << "printing data..." << endl;
+    cout << "Printing data..." << endl;
     int numPoints = A.polytope.size();
     
-    cout << "printing data 1..." << endl;
+    //cout << "printing data 1..." << endl;
     fprintf (out, "Pen b\n");
     
     for (int i = 0;i < numPoints; i ++)
@@ -68,18 +68,18 @@ void print_data(Drone A, Drone B)
   
     numPoints = B.polytope.size();
   
-    cout <<numPoints << endl;
+    //cout <<numPoints << endl;
 
-//    fprintf (out, "Ellipse (%lf,%lf) %lf %lf \n", plume.ovals[0].center.x, plume.ovals[0].center.y, R, R/2);
- //   fprintf (out, "Ellipse (%lf,%lf) %lf %lf \n", plume.ovals[1].center.x, plume.ovals[1].center.y, R, R/2);
+    //fprintf (out, "Ellipse (%lf,%lf) %lf %lf \n", plume.ovals[0].center.x, plume.ovals[0].center.y, R, R/2);
+    //fprintf (out, "Ellipse (%lf,%lf) %lf %lf \n", plume.ovals[1].center.x, plume.ovals[1].center.y, R, R/2);
 
-    cout << "printing data 2..." << endl;
+    //cout << "printing data 2..." << endl;
     fprintf (out, "Pen r\n");
     
     for (int i = 0;i < numPoints; i ++)
         fprintf (out, "Line (%lf,%lf) (%lf,%lf)\n", B.polytope[i].x, B.polytope[i].y, B.polytope[(i+1)%numPoints].x, B.polytope[(i+1)%numPoints].y);
  
-    cout << "done printing data..." << endl;
+    cout << "Done!" << endl;
     return ;
 }
 
@@ -181,7 +181,7 @@ bool CrossPlume (Drone &A, Drone &B, double alpha, PLUME &plume)
             ++iter;
             if (iter > maxiterations)
             {
-                cout<<"Iterations exceeding ..."<<endl;
+                cout<<"CrossPlume() Iterations exceeding ..."<<endl;
                 print_data(A,B);
                 exit (0);
             }
@@ -309,7 +309,7 @@ bool CrossCriticalPath(Drone &A, Drone &B, double alpha, criticalPath &cp)
             endHere = endHere || cp.foundSource(A, B);
 
             if (++iter > maxiterations) {
-                cout << "Iterations exceeding ..." << endl;
+                cout << "CrossCriticalPath() Iterations exceeding ..." << endl;
                 print_data(A, B);
                 std::exit(0);
             }
@@ -375,9 +375,9 @@ inline void legacyGradientLogging(...) {}
 void sketch_algorithm ()
 {
     // 1) Preparing Logging & Stats Tracking    
-    print_test_infrastructure_info();   //print initialization stats from logging.h
+    //print_test_infrastructure_info();   //print initialization stats from logging.h
     Stats stats;                        //Per-epoch info
-    int epochNumber = 0;
+    int epoch = 0;
     
 
     // 2) Initialize Drones & stat tracking
@@ -446,7 +446,7 @@ void sketch_algorithm ()
         stats.computeCross(-lastCP.y, lastCP.x);
 
             
-        stats.print(epochNumber++);
+        stats.print(epoch++);
 
 
         if ( (A.side + B.side) != 3)
@@ -456,7 +456,7 @@ void sketch_algorithm ()
             {
                 alpha = -epsilon;
                 loopEnd = loopEnd || CrossCriticalPath (B, A, alpha, cp);
-                cout << "about to sync" << endl;
+                cout << "Syncing..." << endl;
                 Sync (B, A, alpha, epsilon, cp); // FIX ME
                 A.nabla = B.nabla;
             }
@@ -464,32 +464,14 @@ void sketch_algorithm ()
             {
               alpha = epsilon;
               loopEnd = loopEnd || CrossCriticalPath (A, B, alpha, cp);
-              cout << "about to sync" << endl;
+              cout << "Syncing..." << endl;
               Sync (A, B, alpha, epsilon, cp);
               B.nabla = A.nabla;
             }
         }
     }while (!loopEnd);
-    
-
-    if (!A.polytope.empty()) {
-        cout <<"Initial crossing with A is " << A.polytope[0].getX() << " " << A.polytope[0].getY() << endl;
-    } else {
-        cout << "Initial crossing with A is not available as polytope is empty." << endl;
-    }
-    cout << "angle turned by A is " << " " << A.angleTurned << endl;
-    cout << "distance traversed by A is "<< " " << A.distTraversed << endl;
-    if (!A.polytope.empty()) {
-        cout << "area estimated by A is " << " " << estimateArea (A.polytope) << endl;
-        areas.push_back (estimateArea (A.polytope));
-    } else {
-        cout << "area estimated by A is not available as polytope is empty." << endl;
-
-    lengths.push_back (A.distTraversed);
-    angles.push_back (A.angleTurned);
-    cout << "actual area is  " << PI * majorAxis * minorAxis << endl;
-    }
-
+ 
+    printSummary(A);
     print_data (A,B);
     
     return ;
@@ -520,7 +502,7 @@ void test_infrastructure()
     drone_start_AB = Point (1 - DIST*epsilon*0.5,-2.38);
    
 #ifndef LEGACY
-    maxiterations = 100;
+    maxiterations = 10;
     num = 1;
     gaussianCenter.push_back(Point(1,1));
     gaussianVar.push_back(Point(1,1));

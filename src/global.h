@@ -6,7 +6,7 @@ default_random_engine generator;
 normal_distribution<double> distribution (0, 0.1);
 
 
-int maxiterations=100;
+int maxiterations=10;
 int num = 2;
 int CROSSBOUND = 100;
 double majorAxis = 0.75;

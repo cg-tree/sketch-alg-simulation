@@ -409,7 +409,7 @@ struct criticalPath{
     {
     
        Point motion = PointUtil::vector(droneA.nabla + alpha, dist/100);
-       cout << "motion: " << motion.x << " " << motion.y << endl;
+       cout << "Motion:  X = " << motion.x << "   Y = " << motion.y << "      ";
        
        for(int i = 0; i < 100; i++){
 

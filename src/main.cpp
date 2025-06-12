@@ -19,11 +19,12 @@ using namespace std;
 
 #include "global.h"
 #include "utils.h"
-#include "logging.h"
+
 
 #include "ellipse.h"
 #include "plume.h"
 #include "drone.h"
+#include "logging.h"
 #include "cubicspline.h"
 #include "criticalpath.h"
 

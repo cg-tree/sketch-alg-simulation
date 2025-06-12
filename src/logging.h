@@ -8,6 +8,10 @@
 #include <array>
 #include <string>
 
+//For printSummary()
+
+
+
 // ANSI escape codes for foreground colors
 // (works on most Unix/Linux/MacOS terminals and on Windows 10+ if VirtualTerminalProcessing is enabled)
 
@@ -140,4 +144,52 @@ void print_test_infrastructure_info() {
     for (int i = 0; i < num; ++i) {
         std::cout << gaussianCenter[i].x << " " << gaussianCenter[i].y << std::endl;
     }
+}
+
+void printSummary(const Drone& A) {
+    /*
+    // OLD DEPRECIATED VERSION
+    if (!A.polytope.empty()) {
+        cout <<"Initial crossing with A is " << A.polytope[0].getX() << " " << A.polytope[0].getY() << endl;
+    } else {
+        cout << "Initial crossing with A is not available as polytope is empty." << endl;
+    }
+    cout << "angle turned by A is " << " " << A.angleTurned << endl;
+    cout << "distance traversed by A is "<< " " << A.distTraversed << endl;
+    if (!A.polytope.empty()) {
+        cout << "area estimated by A is " << " " << estimateArea (A.polytope) << endl;
+        areas.push_back (estimateArea (A.polytope));
+    } else {
+        cout << "area estimated by A is not available as polytope is empty." << endl;
+
+    lengths.push_back (A.distTraversed);
+    angles.push_back (A.angleTurned);
+    cout << "actual area is  " << PI * majorAxis * minorAxis << endl;
+    }
+    */
+    using std::cout;  using std::endl;
+    cout << "INSIDE PRINT SUMMARY!" << endl;
+    if (!A.polytope.empty()) {
+        const auto& first = A.polytope.front();
+        cout << "Initial crossing with A is "
+             << first.getX() << " " << first.getY() << endl;
+    } else {
+        cout << "Initial crossing with A is not available as polytope is empty." << endl;
+    }
+
+    cout << "angle turned by A is " << A.angleTurned << endl;
+    cout << "distance traversed by A is " << A.distTraversed << endl;
+
+    if (!A.polytope.empty()) {
+        double estimated = estimateArea(A.polytope);
+        cout << "area estimated by A is " << estimated << endl;
+        areas.push_back(estimated);
+    } else {
+        cout << "area estimated by A is not available as polytope is empty." << endl;
+    }
+
+    lengths.push_back(A.distTraversed);
+    angles.push_back(A.angleTurned);
+
+    cout << "actual area is " << (PI * majorAxis * minorAxis) << endl;
 }
