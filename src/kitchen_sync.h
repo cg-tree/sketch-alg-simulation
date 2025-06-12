@@ -469,7 +469,7 @@ void test_infrastructure()
 {
     gaussianCenter.clear();
     gaussianVar.clear();
-    //initial direction
+    //initial direction in radians
     alpha = 1.47; // slightly off pi/2 to try to cause early crossing
     //velocity
     epsilon = 0.1;
@@ -511,3 +511,33 @@ void test_infrastructure()
         
 }
 
+void test_infv2(Param* p){
+
+    p->gaussianCenter.clear();
+    p->gaussianVar.clear();
+    //initial direction in radians
+    p->alpha = 1.47; // slightly off pi/2 to try to cause early crossing
+    //velocity
+    p->epsilon = 0.1;
+
+    p->CROSSBOUND = 100;
+    p->majorAxis = 0.25;
+    p->minorAxis = 0.25;
+    
+    p->DIST = sqrt (49);
+    
+    p->THRESHOLD = exp (-majorAxis*majorAxis);
+   
+    p->drone_start_B = Point (1 + DIST*epsilon*0.5,-2.38);
+    p->drone_start_A = Point (1 - DIST*epsilon*0.5,-2.38);
+
+    p->drone_start_BB = Point (1 + DIST*epsilon*0.5,-2.38);
+    p->drone_start_AB = Point (1 - DIST*epsilon*0.5,-2.38);
+   
+
+    p->maxiterations = 100;
+    p->num = 1;
+    p->gaussianCenter.push_back(Point(1,1));
+    p->gaussianVar.push_back(Point(1,1));
+
+}
