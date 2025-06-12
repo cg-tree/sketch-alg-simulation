@@ -80,7 +80,7 @@ static void printEpochSummary(
         COLOR_TEXT(
             CYAN,
             " Grad=("   + fmtDouble(gradX) + "," + fmtDouble(gradY) + ")" +
-            " θ="       + fmtDouble(angle)
+            " Theta="       + fmtDouble(angle)
         );
 
     // 3) Drone positions in GREEN

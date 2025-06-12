@@ -200,117 +200,125 @@ bool CrossPlume (Drone &A, Drone &B, double alpha, PLUME &plume)
 // FIX ME: Make this work for the critical path tracing
 bool CrossCriticalPath(Drone &A, Drone &B, double alpha, criticalPath &cp)
 {
-    Point start_pos = A.last; 
-
-    int crossing = A.side; 
-    bool orient = true ;
+    Point start_pos    = A.last; 
+    int   crossing     = A.side; 
+    bool  orient       = true;
     double alphainitial = alpha;
-    bool endHere = false;
-    
-    int iterate = maxiterations;
-    
+    bool  endHere      = false;
+    int   iterate      = maxiterations;
 
-    do{
-        A.MoveDrone (alpha, epsilon, cp.diffepsilon, 0);
+    // — remember what the last side was —
+    int previousSide = 0;
 
+    // —— initial “sketch” loop ——
+    do {
+        A.MoveDrone(alpha, epsilon, cp.diffepsilon, 0);
 
         CrossData crossData = cp.getCross(A, B, alpha, epsilon);
-        if(crossData.second){
+        if (crossData.second) {
             vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
             A.LearnGradient(alpha, epsilon, crossData.first, B, gradient_vec);
             B.LearnGradient(alpha, epsilon, crossData.first, A, gradient_vec);
         }
-        cout << "drone side? " << A.side << endl;
+
         endHere = endHere || cp.foundSource(A, B);
-        
-        // FIX ME: check if this is determining the correct orientation?
-        Point last = A.last;
+
+        // check orientation relative to the starting point
+        Point last     = A.last;
         Point position = A.position;
-        if ( ( PointUtil::orientation(last,position, start_pos) == PointUtil::CLOCKWISE ) && (alpha > 0) )
-            orient = false ;
-        if ( (PointUtil::orientation(last, position, start_pos) == PointUtil::COUNTERCLOCKWISE) && (alpha < 0) )
-            orient = false ;
-
-        if (alpha > 0)
-            alpha += epsilon;
-        else
-            alpha -= epsilon;
-
-        A.angleTurned += abs (alphainitial);
-
-        iterate--;
-        if (iterate < 0){
-            print_data (A,B);
-            exit (0);
+        if ((PointUtil::orientation(last, position, start_pos) == PointUtil::CLOCKWISE) &&
+            (alpha > 0))
+        {
+            orient = false;
         }
-    }while ( (crossing == A.side) && orient && (!endHere) );
-        
-    if ( (crossing == A.side) && (!endHere) ){
-        A.polytope.pop_back (); 
+        if ((PointUtil::orientation(last, position, start_pos) == PointUtil::COUNTERCLOCKWISE) &&
+            (alpha < 0))
+        {
+            orient = false;
+        }
+
+        // advance alpha
+        if (alpha > 0) alpha += epsilon;
+        else           alpha -= epsilon;
+
+        A.angleTurned += std::abs(alphainitial);
+
+        if (--iterate < 0) {
+            print_data(A, B);
+            std::exit(0);
+        }
+
+    } while ((crossing == A.side) && orient && !endHere);
+
+    // —— “walk-back” to critical point if we never left the original side ——
+    if ((crossing == A.side) && !endHere) {
+        // undo the last two steps
         A.polytope.pop_back();
-        A.position = A.last;
-        A.angleTurned -= abs (alphainitial);
-        double dx = start_pos.getX () - A.position.getX();
-        double dy = start_pos.getY () - A.position.getY();
-        double gradient = atan2 (dy, dx);
-        
+        A.polytope.pop_back();
+        A.position     = A.last;
+        A.angleTurned -= std::abs(alphainitial);
+
+        // point back towards the start position
+        double dx       = start_pos.getX() - A.position.getX();
+        double dy       = start_pos.getY() - A.position.getY();
+        double gradient = std::atan2(dy, dx);
+
+        // take a small step along that direction
         Point pos = A.position;
-        Point d1 = start_pos - pos;
+        Point d1  = start_pos - pos;
         Point motion;
         if (d1.length() > epsilon*epsilon)
-            motion = PointUtil::vector (gradient, epsilon * epsilon);
+            motion = PointUtil::vector(gradient, epsilon*epsilon);
         else
-            motion = PointUtil::vector (gradient, d1.length());
+            motion = PointUtil::vector(gradient, d1.length());
         motion = pos + motion;
-        Point d2 = start_pos - motion;
 
-        if (d1.length() < d2.length()){
-            reverse (gradient);
+        Point d2 = start_pos - motion;
+        if (d1.length() < d2.length()) {
+            reverse(gradient);
         }
 
-        A.angleTurned += changeGradient (A.nabla + alpha, gradient);
-        A.nabla = gradient;
+        A.angleTurned += changeGradient(A.nabla + alpha, gradient);
+        A.nabla       = gradient;
 
+        // —— final stepping loop until we cross sides or find the source ——
         int iter = 0;
-        while ( (crossing == A.side) && (!endHere) ){
-            Point new_pos = A.position; 
-            d1 = start_pos - new_pos; 
-            if (d1.length() > (epsilon * epsilon) )
-            {
+        while ((crossing == A.side) && !endHere) {
+            Point new_pos = A.position;
+            d1 = start_pos - new_pos;
+
+            if (d1.length() > (epsilon*epsilon)) {
                 A.MoveDrone(0, epsilon*epsilon, cp.diffepsilon, 0);
-                CrossData crossData = cp.getCross(A, B, alpha, epsilon);
-                if(crossData.second){
-                    vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
-                    A.LearnGradient(alpha, epsilon, crossData.first, B, gradient_vec);
-                    B.LearnGradient(alpha, epsilon, crossData.first, A, gradient_vec);
-                }
-                cout << "Drone side now " << A.side << endl;
-                endHere = endHere || cp.foundSource(A, B); 
-            }
-            else{
+            } else {
                 A.MoveDrone(0, d1.length(), cp.diffepsilon, 0);
-                CrossData crossData = cp.getCross(A, B, alpha, epsilon);
-                if(crossData.second){
-                    vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
-                    A.LearnGradient(alpha, epsilon, crossData.first, B, gradient_vec);
-                    B.LearnGradient(alpha, epsilon, crossData.first, A, gradient_vec);
-                }
-                cout << "Drone side now " << A.side << endl;
-                endHere = endHere || cp.foundSource(A, B);
             }
-            
-            ++iter;
-            if (iter > maxiterations)
-            {
-                cout<<"Iterations exceeding ..."<<endl;
-                print_data(A,B);
-                exit (0);
+
+            CrossData crossData = cp.getCross(A, B, alpha, epsilon);
+            if (crossData.second) {
+                vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
+                A.LearnGradient(alpha, epsilon, crossData.first, B, gradient_vec);
+                B.LearnGradient(alpha, epsilon, crossData.first, A, gradient_vec);
+            }
+
+            // ——— only print when the side actually changes ———
+            if (A.side != previousSide) {
+                cout << "==== DRONE SIDE NOW " << A.side << " ====" << endl;
+                previousSide = A.side;
+            }
+
+            endHere = endHere || cp.foundSource(A, B);
+
+            if (++iter > maxiterations) {
+                cout << "Iterations exceeding ..." << endl;
+                print_data(A, B);
+                std::exit(0);
             }
         }
     }
-    
+
     return endHere;
 }
+
 
 
 #ifndef LEGACY
