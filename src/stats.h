@@ -57,4 +57,9 @@ struct Stats {
         crossA = crossB = 0.0;
         verboseMsg.clear();
     }
+
+    void computeCross(double normalX, double normalY) {
+        crossA = normalX * tangentA[1] - normalY * tangentA[0];
+        crossB = normalX * tangentB[1] - normalY * tangentB[0];
+    }
 };

@@ -36,6 +36,28 @@ struct criticalPath{
         }
     }
 
+    double levelAt(const Point &p) const {
+        return getGaussian(p);
+    }
+
+    /// Compute (and store) the contour around point p and return its number of points
+    int currentContourSize(const Point &p) {
+        // 1) Evaluate the field at p
+        double lvl = getGaussian(p);
+
+        // 2) Rebuild the contour at that level, within ±DIST*diffepsilon of p
+        localContour = getGaussianContours(
+            lvl,
+            contourRes,
+            p.x - DIST * diffepsilon,
+            p.x + DIST * diffepsilon,
+            p.y - DIST * diffepsilon,
+            p.y + DIST * diffepsilon
+        );
+
+        // 3) Return how many sample‐points we got
+        return static_cast<int>(localContour.size());
+    }
 
     vector<Point> getCriticalPathPoints() {
         std::sort(criticalPathPoints.begin(), criticalPathPoints.end()); 
@@ -127,8 +149,8 @@ struct criticalPath{
         double centerX = (A.x + B.x) * 0.5;
         double centerY = (A.y + B.y) * 0.5;
         double level = getGaussian(current);
-        cout << "level: " << level << endl;
-        cout << "contour res:" <<  contourRes << endl;
+        //cout << "level: " << level << endl;
+        //cout << "contour res:" <<  contourRes << endl;
         vector<Point> localContour = getGaussianContours(level, 
             contourRes, 
             centerX - 1*DIST*epsilon, // multiplier here may change based
@@ -136,10 +158,10 @@ struct criticalPath{
             centerY - 1*DIST*epsilon, 
             centerY + 1*DIST*epsilon); 
 
-        cout << "size of local contour: " << localContour.size() << endl;
+        //cout << "size of local contour: " << localContour.size() << endl;
 
         Point criticalPoint = getCriticalPoint(localContour);
-        cout << "critical point: " << criticalPoint.x << " " << criticalPoint.y << endl;
+        //cout << "critical point: " << criticalPoint.x << " " << criticalPoint.y << endl;
 
             vector<double> r = {criticalPoint.x - current.x, criticalPoint.y - current.y};
             vector<double> t = {-gradient[1], gradient[0]};
@@ -175,9 +197,9 @@ struct criticalPath{
         // Need to get the gradient around the initial point
         // and the end point in order to compare sign of 
         // the gradient
-        cout << "check cross function" << endl;
-        cout << "droneA position: " << droneA.position.x + motion.x << " " << droneA.position.y + motion.y << endl;
-        cout << "droneB position: " << droneB.position.x + motion.x << " " << droneB.position.y + motion.y << endl;
+        //cout << "check cross function" << endl;
+        //cout << "droneA position: " << droneA.position.x + motion.x << " " << droneA.position.y + motion.y << endl;
+        //cout << "droneB position: " << droneB.position.x + motion.x << " " << droneB.position.y + motion.y << endl;
   
 
         //get tangent vector, which is normal to the gradient vector
@@ -190,13 +212,14 @@ struct criticalPath{
         droneA.currentContourGradient = {-tangentA[1], tangentA[0]};
         droneB.currentContourGradient = {tangentB[1], -tangentB[0]};
 
+        /*
         for(int i = 0; i < tangentA.size(); i++){
             cout << "tangent A: [" << i << "]: " << tangentA[i] << endl;
         }
         
         for(int i = 0; i < tangentB.size(); i++){
             cout << "tangent B: [" << i << "]: " << tangentB[i] << endl;
-        }
+        }*/
         
 
         vector<Point> cpPoints = getCriticalPathPoints();
@@ -214,8 +237,8 @@ struct criticalPath{
         double crossProductB = vectorBetween[0] * tangentB[1] - vectorBetween[1] * tangentB[0];
 
 
-        cout << "cross prod A: " << crossProductA << endl;
-        cout << "cross prod B: " << crossProductB << endl;
+        //cout << "cross prod A: " << crossProductA << endl;
+        //cout << "cross prod B: " << crossProductB << endl;
 
         
         std::pair<int, int> side;
@@ -290,14 +313,11 @@ struct criticalPath{
     }
 
     Point getCrossingPoint(Drone droneA, Drone droneB){
-        // NOte that Drone A is the drone we are determining
+        // Note that Drone A is the drone we are determining
         // the crossing point for 
-
-        cout << "get crossing point function " << endl;
         double startLevel = getGaussian(droneA.position);
         double endLevel = getGaussian(droneA.last);
-        cout << "start level: " << startLevel << endl;
-        cout << "end level: " << endLevel << endl;
+        cout << "getCrossingPoint() |  start level: " << startLevel << "   end level: " << endLevel << endl;
 
         // used to look for point that minimizes the curvature
         // (critical point numerically)
@@ -395,7 +415,7 @@ struct criticalPath{
 
             std::pair<int,int> crossInfo = checkCross(droneA, droneB, motion);
     
-            cout << "cross info" << crossInfo.first << ", " << crossInfo.second << endl;  
+            //cout << "cross info" << crossInfo.first << ", " << crossInfo.second << endl;  
 
             Point crossPoint = Point(0,0);
             if(crossInfo.first != LEFT) // location of drone A

@@ -185,13 +185,13 @@ class Drone {
         
         // Check for position exception
         if (abs(nextPosition.x) > 5 || abs(nextPosition.y) > 5)
-            cout << "position exception! "<<endl;
+            //cout << "position exception! "<<endl;
 
         last = position;
         position = nextPosition;
         polytope.push_back (position);
 
-        cout << "moved one drone now getting contour grad" << endl;
+        //cout << "moved one drone now getting contour grad" << endl;
         // Calculate gradient using criticalPath
         vector<Point> surroundingPoints;
         for (int i = -1; i <= 1; i++) {
@@ -229,15 +229,15 @@ class Drone {
         }
         currentContourGradient = gradient;
 
-        cout << "current point: " << position.x << " " << position.y << endl;
+        //cout << "current point: " << position.x << " " << position.y << endl;
     }
 
 #ifndef LEGACY
     
     void LearnGradient(double alpha, double dist, Point crossingPoint, Drone &otherDrone, vector<double> gradient_vector) {
-        cout << "Learning gradient for drone pair" << endl;
+        //cout << "Learning gradient for drone pair" << endl;
         
-        cout << "gradient vector: " << gradient_vector[0] << " " << gradient_vector[1] << endl;
+        //cout << "gradient vector: " << gradient_vector[0] << " " << gradient_vector[1] << endl;
         double angle = 0;
         if( ( gradient_vector[0] != 0 ) || ( gradient_vector[1] != 0 ) ){
           angle = getAngle (gradient_vector);
@@ -245,7 +245,7 @@ class Drone {
 
         assert(abs(angle) < (2*PI) );
 
-        cout << "angle: " << angle << endl;
+        //out << "angle: " << angle << endl;
 
         //double gradient = angle + PI/2 ;
         double gradient = angle;

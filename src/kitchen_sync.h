@@ -1,3 +1,5 @@
+#include "logging.h"
+#include "stats.h"
 
 void Sync (Drone &A, Drone &B, double alpha, double dist, PLUME &plume)
 {
@@ -198,247 +200,276 @@ bool CrossPlume (Drone &A, Drone &B, double alpha, PLUME &plume)
 // FIX ME: Make this work for the critical path tracing
 bool CrossCriticalPath(Drone &A, Drone &B, double alpha, criticalPath &cp)
 {
-    Point start_pos = A.last; 
-
-    int crossing = A.side; 
-    bool orient = true ;
+    Point start_pos    = A.last; 
+    int   crossing     = A.side; 
+    bool  orient       = true;
     double alphainitial = alpha;
-    bool endHere = false;
-    
-    int iterate = maxiterations;
-    
+    bool  endHere      = false;
+    int   iterate      = maxiterations;
 
-    do{
-        A.MoveDrone (alpha, epsilon, cp.diffepsilon, 0);
+    // — remember what the last side was —
+    int previousSide = 0;
 
+    // —— initial “sketch” loop ——
+    do {
+        A.MoveDrone(alpha, epsilon, cp.diffepsilon, 0);
 
         CrossData crossData = cp.getCross(A, B, alpha, epsilon);
-        if(crossData.second){
+        if (crossData.second) {
             vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
             A.LearnGradient(alpha, epsilon, crossData.first, B, gradient_vec);
             B.LearnGradient(alpha, epsilon, crossData.first, A, gradient_vec);
         }
-        cout << "drone side? " << A.side << endl;
+
         endHere = endHere || cp.foundSource(A, B);
-        
-        // FIX ME: check if this is determining the correct orientation?
-        Point last = A.last;
+
+        // check orientation relative to the starting point
+        Point last     = A.last;
         Point position = A.position;
-        if ( ( PointUtil::orientation(last,position, start_pos) == PointUtil::CLOCKWISE ) && (alpha > 0) )
-            orient = false ;
-        if ( (PointUtil::orientation(last, position, start_pos) == PointUtil::COUNTERCLOCKWISE) && (alpha < 0) )
-            orient = false ;
-
-        if (alpha > 0)
-            alpha += epsilon;
-        else
-            alpha -= epsilon;
-
-        A.angleTurned += abs (alphainitial);
-
-        iterate--;
-        if (iterate < 0){
-            print_data (A,B);
-            exit (0);
+        if ((PointUtil::orientation(last, position, start_pos) == PointUtil::CLOCKWISE) &&
+            (alpha > 0))
+        {
+            orient = false;
         }
-    }while ( (crossing == A.side) && orient && (!endHere) );
-        
-    if ( (crossing == A.side) && (!endHere) ){
-        A.polytope.pop_back (); 
+        if ((PointUtil::orientation(last, position, start_pos) == PointUtil::COUNTERCLOCKWISE) &&
+            (alpha < 0))
+        {
+            orient = false;
+        }
+
+        // advance alpha
+        if (alpha > 0) alpha += epsilon;
+        else           alpha -= epsilon;
+
+        A.angleTurned += std::abs(alphainitial);
+
+        if (--iterate < 0) {
+            print_data(A, B);
+            std::exit(0);
+        }
+
+    } while ((crossing == A.side) && orient && !endHere);
+
+    // —— “walk-back” to critical point if we never left the original side ——
+    if ((crossing == A.side) && !endHere) {
+        // undo the last two steps
         A.polytope.pop_back();
-        A.position = A.last;
-        A.angleTurned -= abs (alphainitial);
-        double dx = start_pos.getX () - A.position.getX();
-        double dy = start_pos.getY () - A.position.getY();
-        double gradient = atan2 (dy, dx);
-        
+        A.polytope.pop_back();
+        A.position     = A.last;
+        A.angleTurned -= std::abs(alphainitial);
+
+        // point back towards the start position
+        double dx       = start_pos.getX() - A.position.getX();
+        double dy       = start_pos.getY() - A.position.getY();
+        double gradient = std::atan2(dy, dx);
+
+        // take a small step along that direction
         Point pos = A.position;
-        Point d1 = start_pos - pos;
+        Point d1  = start_pos - pos;
         Point motion;
         if (d1.length() > epsilon*epsilon)
-            motion = PointUtil::vector (gradient, epsilon * epsilon);
+            motion = PointUtil::vector(gradient, epsilon*epsilon);
         else
-            motion = PointUtil::vector (gradient, d1.length());
+            motion = PointUtil::vector(gradient, d1.length());
         motion = pos + motion;
-        Point d2 = start_pos - motion;
 
-        if (d1.length() < d2.length()){
-            reverse (gradient);
+        Point d2 = start_pos - motion;
+        if (d1.length() < d2.length()) {
+            reverse(gradient);
         }
 
-        A.angleTurned += changeGradient (A.nabla + alpha, gradient);
-        A.nabla = gradient;
+        A.angleTurned += changeGradient(A.nabla + alpha, gradient);
+        A.nabla       = gradient;
 
+        // —— final stepping loop until we cross sides or find the source ——
         int iter = 0;
-        while ( (crossing == A.side) && (!endHere) ){
-            Point new_pos = A.position; 
-            d1 = start_pos - new_pos; 
-            if (d1.length() > (epsilon * epsilon) )
-            {
+        while ((crossing == A.side) && !endHere) {
+            Point new_pos = A.position;
+            d1 = start_pos - new_pos;
+
+            if (d1.length() > (epsilon*epsilon)) {
                 A.MoveDrone(0, epsilon*epsilon, cp.diffepsilon, 0);
-                CrossData crossData = cp.getCross(A, B, alpha, epsilon);
-                if(crossData.second){
-                    vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
-                    A.LearnGradient(alpha, epsilon, crossData.first, B, gradient_vec);
-                    B.LearnGradient(alpha, epsilon, crossData.first, A, gradient_vec);
-                }
-                cout << "Drone side now " << A.side << endl;
-                endHere = endHere || cp.foundSource(A, B); 
-            }
-            else{
+            } else {
                 A.MoveDrone(0, d1.length(), cp.diffepsilon, 0);
-                CrossData crossData = cp.getCross(A, B, alpha, epsilon);
-                if(crossData.second){
-                    vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
-                    A.LearnGradient(alpha, epsilon, crossData.first, B, gradient_vec);
-                    B.LearnGradient(alpha, epsilon, crossData.first, A, gradient_vec);
-                }
-                cout << "Drone side now " << A.side << endl;
-                endHere = endHere || cp.foundSource(A, B);
             }
-            
-            ++iter;
-            if (iter > maxiterations)
-            {
-                cout<<"Iterations exceeding ..."<<endl;
-                print_data(A,B);
-                exit (0);
+
+            CrossData crossData = cp.getCross(A, B, alpha, epsilon);
+            if (crossData.second) {
+                vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
+                A.LearnGradient(alpha, epsilon, crossData.first, B, gradient_vec);
+                B.LearnGradient(alpha, epsilon, crossData.first, A, gradient_vec);
+            }
+
+            // ——— only print when the side actually changes ———
+            if (A.side != previousSide) {
+                cout << "==== DRONE SIDE NOW " << A.side << " ====" << endl;
+                previousSide = A.side;
+            }
+
+            endHere = endHere || cp.foundSource(A, B);
+
+            if (++iter > maxiterations) {
+                cout << "Iterations exceeding ..." << endl;
+                print_data(A, B);
+                std::exit(0);
             }
         }
     }
-    
+
     return endHere;
 }
+
+
+
+#ifndef LEGACY
+/*****************************************
+ * this is a simple test that is accurate when there is only one gaussian
+ * we compute the shortest path between the drone and the center of the gaussian
+ * and take that to be the real gradient.
+ * Then we can try to compute the error.
+ * I'm concerned about the use of polar coordinates because it introduces additional
+ * complexity compared to the alternatives that we could use in cartesian coordinates
+ * such as: 
+ *   store the normalized grad vector, or normalize to either the x or y component
+ * 
+ * nabla is supposed to store the angle of the gradient(scalar)
+ * */
+static void legacyGradientLogging(
+    const Point& center,
+    const Drone& A,
+    const std::vector<double>& gradient_vec,
+    FILE* out = stderr    // default to stderr; change if you have another stream
+) {
+    // distance
+    fprintf(out,
+            "distance from droneA to source %f\n",
+            get_dist(center, A.position));
+
+    // real vs approx gradient
+    Point realgrad{ center.x - A.position.x,
+                    center.y - A.position.y };
+    Point graderr{ realgrad.x - gradient_vec[0],
+                   realgrad.y - gradient_vec[1] };
+    fprintf(out,
+            "real grad: %f, %f\n grad_approx: %f, %f\n grad_error: %f,%f\n",
+            realgrad.x, realgrad.y,
+            gradient_vec[0], gradient_vec[1],
+            graderr.x, graderr.y);
+
+    std::vector<double> rgrad{ realgrad.x, realgrad.y };
+    double realgradangle = getAngle(rgrad);
+    fprintf(out,
+            "nabla %f realgrad angle %f\n",
+            A.nabla, realgradangle);
+
+    fflush(out);
+}
+#else
+// no-op stub
+inline void legacyGradientLogging(...) {}
+#endif
+
+
 
 /***********************************************************************/
 void sketch_algorithm ()
 {
+    // 1) Preparing Logging & Stats Tracking    
+    print_test_infrastructure_info();   //print initialization stats from logging.h
+    Stats stats;                        //Per-epoch info
+    int epochNumber = 0;
     
+
+    // 2) Initialize Drones & stat tracking
     Drone A (drone_start_A, drone_start_A, 1, 0, true);
     Drone B (drone_start_B, drone_start_B, 2, 0, false);
-    print_test_infrastructure_info(); //print initialization stats
-    
-    bool loopEnd = false ;
+    Point startPoint = {(drone_start_A.x + drone_start_B.x) / 2,
+                        (drone_start_A.y + drone_start_B.y) / 2};
 
-    Point startPoint = {(drone_start_A.x + drone_start_B.x) / 2, (drone_start_A.y + drone_start_B.y) / 2};
     double res = epsilon*epsilon; // how much resolution should we calculate contourlines at?
     criticalPath cp(startPoint, epsilon, res);
     
-    //lvl 0 
+
+    bool loopEnd = false ;
     do{
-
-        /******************************/
-        /* try to catch signals
-         * currently fails because we are stuck inside one of the functions called later in this loop
-         * use ctrl+z to pause and kill to kill the process if other signals fail
-         */
-        /*if(PyErr_CheckSignals()){
-            throw py::error_already_set();
-        }*/
-        /******************************/
-
+        // --- each "epoch" is one pass through this inner loop ---
         int iter = 0;
+        stats.reset();
 
-        //lvl 1
-        while (( (A.numCross + B.numCross == 0) || (3 == A.side + B.side) ) && (!loopEnd) )
+        // record starting level
+        stats.startLevel = cp.levelAt(A.position); 
+
+        CrossData crossData = cp.getCross(A, B, alpha, epsilon); //Grabbed outside for stats recording scope
+        while (((A.numCross + B.numCross == 0) || (3 == A.side + B.side)) 
+                && (!loopEnd))
         {
-            cout << "inside loop " << iter << endl;
-            ++iter;
-            if (iter > maxiterations)
-            {
-                cout<<"Iterations exceeding ..."<<endl;
-                print_data(A,B); 
-                exit (0);
-            }
-            
+            // 3) Move both drones
             A.MoveDrone(alpha, epsilon, cp.diffepsilon, 1);
             B.MoveDrone(alpha, epsilon, cp.diffepsilon, 1);
-
-
+            
             loopEnd = loopEnd || cp.foundSource(A, B);
             
-            CrossData crossData = cp.getCross(A, B, alpha, epsilon);
+            // 4) Check for a "cross" and if so, learn gradient. 
+            // CrossData crossData = cp.getCross(A, B, alpha, epsilon);
             if(crossData.second){
-                // cout << "numcross A" << A.numCross << endl;
-                // cout << "numcross B" << B.numCross << endl;
-                // cout << "A side" << A.side << endl;
-                // cout << "B side" << B.side << endl;
-
-                // cout << "crossed; learning gradient..." << endl;
-                vector<double> gradient_vec = cp.getGradientAtPoint(crossData.first);
+                auto gradient_vec = cp.getGradientAtPoint(crossData.first);
                 A.LearnGradient(alpha, epsilon, crossData.first, B, gradient_vec);
-#ifndef LEGACY
-                /*****************************************
-                 * this is a simple test that is accurate when there is only one gaussian
-                 * we compute the shortest path between the drone and the center of the gaussian
-                 * and take that to be the real gradient.
-                 * Then we can try to compute the error.
-                 * I'm concerned about the use of polar coordinates because it introduces additional
-                 * complexity compared to the alternatives that we could use in cartesian coordinates
-                 * such as: 
-                 *   store the normalized grad vector, or normalize to either the x or y component
-                 * 
-                 * nabla is supposed to store the angle of the gradient(scalar)
-                 * */
-                fprintf(stderr,"distance from droneA to source %f\n",get_dist(gaussianCenter[0],A.position));//printf drone tracking
-                Point realgrad = Point(gaussianCenter[0].x-A.position.x,
-                gaussianCenter[0].y-A.position.y);
-                Point graderr = Point(realgrad.x - gradient_vec[0], realgrad.y - gradient_vec[1]);
-                fprintf(stderr,"real grad: %f, %f\n grad_approx: %f, %f\n grad_error: %f,%f\n",
-                    realgrad.x,realgrad.y,
-                    gradient_vec[0], gradient_vec[1],
-                    graderr.x, graderr.y);
-
-                vector<double> rgrad;
-                rgrad.push_back(realgrad.x);
-                rgrad.push_back(realgrad.y);
-                double realgradangle = getAngle(rgrad);
-                fprintf(stderr,"nabla %f realgrad angle %f\n",
-                    A.nabla,
-                    realgradangle);
-                      
-                fflush(out);
-                /******************************************/
-#endif //LEGACY
+                
+                #ifndef LEGACY
+                    legacyGradientLogging(gaussianCenter[0], A, gradient_vec);
+                #endif
+                
                 B.LearnGradient(alpha, epsilon, crossData.first, A, gradient_vec);
-
             }
 
+            ++iter;
+            if (iter > maxiterations) {
+                // Fatal: Dump & Exit
+                print_data(A,B); 
+                exit (1);
+            }
+        }
             
-        }//lvl1
+        // 5) Record Statistics
+        stats.endLevel    = cp.levelAt(A.position);        
+        stats.gradX       = A.currentContourGradient[0];   
+        stats.gradY       = A.currentContourGradient[1];  
+        stats.angle       = A.nabla;
+        stats.droneA      = { A.position.x,  A.position.y };
+        stats.droneB      = { B.position.x,  B.position.y };
+        stats.contourSize = cp.currentContourSize(A.position);
+        stats.critPt      = { crossData.first.x, crossData.first.y };
+        stats.tangentA    = {A.currentTangent[0], A.currentTangent[1]};
+        stats.tangentB    = {B.currentTangent[0], B.currentTangent[1]};
+        auto cpPoints = cp.getCriticalPathPoints();
+        auto lastCP  = cpPoints.back();
+        stats.computeCross(-lastCP.y, lastCP.x);
+
+            
+        stats.print(epochNumber++);
 
 
         if ( (A.side + B.side) != 3)
         {
-
             // If A crosses
             if ( (A.side == 2) && (B.side == 2) )
             {
                 alpha = -epsilon;
-            //    B.nabla = A.nabla;
-
-                loopEnd = loopEnd || CrossCriticalPath (B,A, alpha, cp);
+                loopEnd = loopEnd || CrossCriticalPath (B, A, alpha, cp);
                 cout << "about to sync" << endl;
-                Sync (B,A,alpha, epsilon, cp); // FIX ME
+                Sync (B, A, alpha, epsilon, cp); // FIX ME
                 A.nabla = B.nabla;
-              
- //               cout << "testing Sync A... "<< A.position.x << " "<<A.position.y <<" "<<alpha<<" "<<A.nabla<< endl;
- //               cout << "testing Sync B... "<< B.position.x << " "<<B.position.y <<" "<<alpha<<" "<<B.nabla<< endl;
             }
             else // B crosses
             {
               alpha = epsilon;
-              loopEnd = loopEnd || CrossCriticalPath (A,B, alpha, cp);
+              loopEnd = loopEnd || CrossCriticalPath (A, B, alpha, cp);
               cout << "about to sync" << endl;
-              Sync (A,B,alpha, epsilon, cp);
+              Sync (A, B, alpha, epsilon, cp);
               B.nabla = A.nabla;
-                
-   //             cout << "testing Sync B... "<< B.position.x << " "<<B.position.y <<" "<<alpha<<" "<<B.nabla<< endl;
-   //             cout << "testing Sync A... "<< A.position.x << " "<<A.position.y <<" "<<alpha<<" "<<A.nabla<< endl;
-            
             }
         }
-    }while (!loopEnd);//lvl 0
+    }while (!loopEnd);
     
 
     if (!A.polytope.empty()) {
