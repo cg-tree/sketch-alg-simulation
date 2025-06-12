@@ -471,7 +471,7 @@ void sketch_algorithm(Param* p)
         }
     }while (!loopEnd);
  
-    printSummary(A);
+    printSummary(p, A);
     print_data (p, A,B);
     
     return ;

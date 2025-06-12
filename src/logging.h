@@ -146,7 +146,7 @@ void print_test_infrastructure_info(Param* p) {
     }
 }
 
-void printSummary(const Drone& A) {
+void printSummary(Param *p, const Drone& A) {
     /*
     // OLD DEPRECIATED VERSION
     if (!A.polytope.empty()) {
@@ -183,13 +183,13 @@ void printSummary(const Drone& A) {
     if (!A.polytope.empty()) {
         double estimated = estimateArea(A.polytope);
         cout << "area estimated by A is " << estimated << endl;
-        areas.push_back(estimated);
+        p->areas.push_back(estimated);
     } else {
         cout << "area estimated by A is not available as polytope is empty." << endl;
     }
 
-    lengths.push_back(A.distTraversed);
-    angles.push_back(A.angleTurned);
+    p->lengths.push_back(A.distTraversed);
+    p->angles.push_back(A.angleTurned);
 
-    cout << "actual area is " << (PI * majorAxis * minorAxis) << endl;
+    cout << "actual area is " << (PI * p->majorAxis * p->minorAxis) << endl;
 }
