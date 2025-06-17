@@ -2,14 +2,35 @@
 
 #include <cassert>
 #include <vector>
+#include "utils.h"
 #include "omniscient-utils.h"
 
 void omniscient_concentration_partialxx(){}
 void omniscient_concentration_partialyy(){}
-void omniscient_concentration_partialxy(){}
-void omniscient_concentration_partialyx(){}
-void omniscient_concentration_partialx(){}
-void omniscient_concentration_partialy(){}
+void omniscient_concentration_partialxy(){
+  //partialx * (partialy/concentration)
+}
+void omniscient_concentration_partialyx(){
+  //partialy * (partialx/concentration)
+}
+
+void omniscient_concentration_partialx(){
+  double concentration = getGaussian();
+  double sum =0;
+  for(){
+    sum += ( gauss_centers[i].x - x )/ gauss_vars[i].x;
+  }
+  *partialx = concentration * sum;
+}
+
+void omniscient_concentration_partialy(){
+  double concentration = getGaussian();
+  double sum =0;
+  for(){
+    sum += ( gauss_centers[i].y - y )/ gauss_vars[i].y;
+  }
+  *partialy = concentration * sum;
+}
 
 /*
  * return [partialx(x,y), partialy(x,y)]
@@ -42,6 +63,30 @@ void omniscient_concentration_hessian(
       gauss_centers, gauss_vars, x, y, partialxy);
   omniscient_concentration_partialyx(
       gauss_centers, gauss_vars, x, y, partialyx);
+}
+
+void omniscient_curvature_at_point(
+    vector<double> gauss_centers,
+    vector<double> gauss_vars,
+    double x, double y, double* curvature){
+  double partialx;
+  double partialy;
+  double partialxx;
+  double partialxy;
+  double partialyx;
+  double partialyy;
+
+  omniscient_concentration_gradient(
+      gauss_centers, gauss_vars, x, y,&partialx, &partialy);
+
+
+  omniscient_concentration_hessian(
+      gauss_centers, gauss_vars, x, y,
+      &partialxx, &partialyy
+      &partialxy, &partialxy);
+
+  //get_orthogonal vector()
+
 }
 
 void omniscient_critical_point_at_level(){}
