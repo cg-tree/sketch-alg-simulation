@@ -408,9 +408,12 @@ struct criticalPath{
     CrossData getCross(Param* p, Drone& droneA, Drone& droneB, double alpha, double dist)
     {
     
-       Point motion = PointUtil::vector(droneA.nabla + p->alpha, dist/100);
-       cout << "Motion:  X = " << motion.x << "   Y = " << motion.y << "      ";
-       
+        Point motion = PointUtil::vector(droneA.nabla + p->alpha, dist/100);
+        // **Print which drone** (“A” or “B”) by using the drone’s id field
+        cout << "Drone " << droneA.id
+            << " Motion:  X=" << motion.x
+            << "   Y=" << motion.y << "   ";
+        
        for(int i = 0; i < 100; i++){
 
             std::pair<int,int> crossInfo = checkCross(p, droneA, droneB, motion);

@@ -2,22 +2,23 @@
 
 class Drone {
     public :
-    Point position;
-    Point last;
-    double nabla ; //just the gradient angle, not the slope
-    int inside, numCross ;
-    bool droneIn;
-    double angleTurned;
-    double distTraversed;
-    int currentGaussian;
-    Point motion; // FIX ME ; can delete
-    vector<Point> polytope;
-    vector<double> lastContourGradient;
-    vector<double> currentContourGradient;
-    LineSegment currPath;
-    vector<double> lastTangent;
-    vector<double> currentTangent;
-    int side;
+        char id;            //'A' or 'B'
+        Point position;
+        Point last;
+        double nabla ; //just the gradient angle, not the slope
+        int inside, numCross ;
+        bool droneIn;
+        double angleTurned;
+        double distTraversed;
+        int currentGaussian;
+        Point motion; // FIX ME ; can delete
+        vector<Point> polytope;
+        vector<double> lastContourGradient;
+        vector<double> currentContourGradient;
+        LineSegment currPath;
+        vector<double> lastTangent;
+        vector<double> currentTangent;
+        int side;
     
     Drone() 
     : position(Point(0, 0)), 
@@ -35,8 +36,10 @@ class Drone {
       currPath(Point(0,0), Point(0,0)),
       side(0) {}
 
-    Drone(Point P1, Point P2, int side, double nab, bool flag) 
-        : position(P1), 
+    Drone(char id_, Point P1, Point P2, int side, double nab, bool flag) 
+        : 
+        id(id_),
+        position(P1), 
         last(P2), 
         inside(0), 
         nabla(nab), 
