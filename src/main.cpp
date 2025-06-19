@@ -25,7 +25,6 @@ using namespace std;
 #include "plume.h"
 #include "drone.h"
 #include "logging.h"
-#include "logging.h"
 #include "cubicspline.h"
 #include "criticalpath.h"
 #include "kitchen_sync.h"
@@ -34,12 +33,13 @@ using namespace std;
 
 int main()
 {
-  Param p;
+    #ifndef LEGACY
+    Param p;
+    test_infrastructure(&p);
 
-#ifndef LEGACY
-  sketch_algorithm(&p);
-#endif //LEGACY
-#ifdef LEGACY
+    sketch_algorithm(&p);
+    #endif //LEGACY
+    #ifdef LEGACY
     int i = 0;
     // 0.005 originally
     // for testing purposes making this larger and looping only once
