@@ -180,6 +180,7 @@ void omniscient_concentration_partialxy(
       gauss_centers, gauss_vars, x, y, &partialy);
 
   *partialxy = partialx * ( partialy / concentration );
+  if (*partialxy == -0) *partialxy = 0;
 }
 
 void omniscient_concentration_partialyx(
@@ -201,6 +202,7 @@ void omniscient_concentration_partialyx(
       gauss_centers, gauss_vars, x, y, &partialy);
 
   *partialyx = partialy * ( partialx / concentration );
+  if (*partialyx == -0) *partialyx = 0;
 }
 
 void omniscient_concentration_hessian(
@@ -271,44 +273,103 @@ void omniscient_curvature_at_point(
 void omniscient_critical_point_at_level(){}
 
 #ifdef TEST
-void test_omniscient_concentration_partialxx(){}
-void test_omniscient_concentration_partialyy(){}
-void test_omniscient_concentration_partialxy(){}
-void test_omniscient_concentration_partialyx(){}
 void test_omniscient_critical_point_at_level(){}
+
+/****************************************************************/
 void test_omniscient_concentration_partialx(){
 
   vector<Point> gauss_centers;
   vector<Point> gauss_vars;
-  double x = 1;
-  double y = 0;
   gauss_centers.push_back( Point(0,0) );
   gauss_vars.push_back( Point(1,1) );
   double partialx;
+
+  //expect negative value
+  double x = 1;
+  double y = 0;
 
   omniscient_concentration_partialx(
       gauss_centers, gauss_vars, x, y, &partialx);
   
   printf("partialx %f\n",partialx);
   assert(partialx <0);
+
+  //expect positive value
+  x = -1;
+
+  omniscient_concentration_partialx(
+      gauss_centers, gauss_vars, x, y, &partialx);
+
+  printf("partialx %f\n",partialx);
+  assert(partialx >0);
+
+  //expect zero
+  x = 0;
+  y = 1;
+
+  omniscient_concentration_partialx(
+      gauss_centers, gauss_vars, x, y, &partialx);
+
+  printf("partialx %f\n",partialx);
+  assert(partialx ==0);
+
+  //expect zero
+  y = -1;
+
+  omniscient_concentration_partialx(
+      gauss_centers, gauss_vars, x, y, &partialx);
+
+  printf("partialx %f\n",partialx);
+  assert(partialx ==0);
 }
+/****************************************************************/
 void test_omniscient_concentration_partialy(){
 
   vector<Point> gauss_centers;
   vector<Point> gauss_vars;
-  double x = 0;
-  double y = 1;
   gauss_centers.push_back( Point(0,0) );
   gauss_vars.push_back( Point(1,1) );
   double partialy;
 
+  //expect negative
+  double x = 0;
+  double y = 1;
   omniscient_concentration_partialy(
       gauss_centers, gauss_vars, x, y, &partialy);
   
   printf("partialy %f\n",partialy);
   assert(partialy <0);
+  
+  //expect positive value
+  y = -1;
+
+  omniscient_concentration_partialy(
+      gauss_centers, gauss_vars, x, y, &partialy);
+
+  printf("partialy %f\n",partialy);
+  assert(partialy >0);
+
+  //expect zero
+  x = 1;
+  y = 0;
+
+  omniscient_concentration_partialy(
+      gauss_centers, gauss_vars, x, y, &partialy);
+
+  printf("partialy %f\n",partialy);
+  assert(partialy ==0);
+
+  //expect zero
+  x = -1;
+
+  omniscient_concentration_partialy(
+      gauss_centers, gauss_vars, x, y, &partialy);
+
+  printf("partialy %f\n",partialy);
+  assert(partialy ==0);
 }
 
+/****************************************************************/
 void test_omniscient_concentration_gradient(){
   vector<Point> gauss_centers;
   vector<Point> gauss_vars;
@@ -326,6 +387,90 @@ void test_omniscient_concentration_gradient(){
 
   printf("Test concentration gradient PASSED\n");
 }
+/****************************************************************/
+void test_omniscient_concentration_partialxx(){
+  vector<Point> gauss_centers;
+  vector<Point> gauss_vars;
+  gauss_centers.push_back( Point(0,0) );
+  gauss_vars.push_back( Point(1,1) );
+  
+  double x = 0;
+
+  double partialxx;
+  for(double y = -1; y <= 1; y += 1){
+    omniscient_concentration_partialxx(
+        gauss_centers, gauss_vars, x, y, &partialxx);
+
+    printf("partialxx %f\n",partialxx);
+    assert( partialxx < 0 );
+  }
+
+  
+}
+/****************************************************************/
+void test_omniscient_concentration_partialyy(){
+  vector<Point> gauss_centers;
+  vector<Point> gauss_vars;
+  gauss_centers.push_back( Point(0,0) );
+  gauss_vars.push_back( Point(1,1) );
+  
+  double y = 0;
+  
+  double partialyy;
+  for(double x = -1; x <= 1; x += 1){
+    omniscient_concentration_partialyy(
+      gauss_centers, gauss_vars, x, y, &partialyy);
+    printf("partialyy %f\n",partialyy);
+    assert( partialyy < 0 );
+  }
+}
+/****************************************************************/
+void test_omniscient_concentration_partialxy(){
+  vector<Point> gauss_centers;
+  vector<Point> gauss_vars;
+  gauss_centers.push_back( Point(0,0) );
+  gauss_vars.push_back( Point(1,1) );
+  double y = 0;
+  double partialxy;
+  for(double x = -1; x <= 1; x += 1){
+  omniscient_concentration_partialxy(
+      gauss_centers, gauss_vars, x, y, &partialxy);
+    printf("partialxy %f\n",partialxy);
+    assert( partialxy == 0 );
+  }
+  
+  double x = 0;
+  for(double y = -1; y <= 1; y += 1){
+  omniscient_concentration_partialxy(
+      gauss_centers, gauss_vars, x, y, &partialxy);
+    printf("partialxy %f\n",partialxy);
+    assert( partialxy == 0 );
+  }
+}
+/****************************************************************/
+void test_omniscient_concentration_partialyx(){
+  vector<Point> gauss_centers;
+  vector<Point> gauss_vars;
+  gauss_centers.push_back( Point(0,0) );
+  gauss_vars.push_back( Point(1,1) );
+  double x = 0;
+  double partialyx;
+  for(double y = -1; y <= 1; y += 1){
+  omniscient_concentration_partialyx(
+      gauss_centers, gauss_vars, x, y, &partialyx);
+    printf("partialyx %f\n",partialyx);
+    assert( partialyx == 0 );
+  }
+
+  double y = 0;
+  for(double x = -1; x <= 1; x += 1){
+  omniscient_concentration_partialyx(
+      gauss_centers, gauss_vars, x, y, &partialyx);
+    printf("partialyx %f\n",partialyx);
+    assert( partialyx == 0 );
+  }
+}
+/****************************************************************/
 void test_omniscient_concentration_hessian(){
 
   vector<Point> gauss_centers;
@@ -351,6 +496,7 @@ void test_omniscient_concentration_hessian(){
 
 }
 
+/****************************************************************/
 void test_omniscient_curvature_at_point(){
 
   vector<Point> gauss_centers;
@@ -385,27 +531,23 @@ void test_omniscient_curvature_at_point(){
 
 
 }
+/****************************************************************/
 
 int main(){
-  test_omniscient_concentration_partialxx(
-    );
+  test_omniscient_concentration_partialx();
+  
+  test_omniscient_concentration_partialy();
+  
+  test_omniscient_concentration_gradient();
+  
+  test_omniscient_concentration_partialxx();
 
-  test_omniscient_concentration_partialyy(
-    );
+  test_omniscient_concentration_partialyy();
   
   test_omniscient_concentration_partialxy(
     );
   
   test_omniscient_concentration_partialyx(
-    );
-  
-  test_omniscient_concentration_partialx(
-    );
-  
-  test_omniscient_concentration_partialy(
-    );
-  
-  test_omniscient_concentration_gradient(
     );
   
   test_omniscient_concentration_hessian();
