@@ -16,7 +16,7 @@ double epsilon, INF;
 double varX, varY;
 
 vector<double> areas, lengths, angles, eps;
-FILE *out = fopen ("../sketch_plot.txt", "w");
+FILE *out = fopen ("../vis/sketch_plot.txt", "w");
 
 
 Point drone_start_B, drone_start_A, drone_start_AB, drone_start_BB;
