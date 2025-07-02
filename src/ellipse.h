@@ -1,4 +1,5 @@
-
+#ifndef ELLIPSE_H
+#define ELLIPSE_H
 class Ellipse {
 
 public:
@@ -202,3 +203,4 @@ LineSegment Ellipse::intersections(Line &line) {
     }
 }
 
+#endif //ELLIPSE_H

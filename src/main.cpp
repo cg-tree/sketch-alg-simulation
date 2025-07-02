@@ -14,7 +14,7 @@
 
 using namespace std;
 
-#include "point.h"
+//#include "point.h"
 #include "line.h"
 #include "param.h"
 #include "global.h"
@@ -28,8 +28,6 @@ using namespace std;
 #include "cubicspline.h"
 #include "criticalpath.h"
 #include "kitchen_sync.h"
-
-
 
 int main()
 {

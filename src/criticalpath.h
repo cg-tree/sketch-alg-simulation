@@ -1,4 +1,5 @@
-
+#ifndef CRITICALPATH_H
+#define CRITICALPATH_H
 
 struct criticalPath{
     Point stcriticalPoint;
@@ -22,12 +23,13 @@ struct criticalPath{
     : stcriticalPoint(start), diffepsilon(p->epsilon), contourRes(res) {
         // Initialize the critical path by finding the first critical point
         double level = getGaussian(p, start);
-        vector<Point> initialContour = getGaussianContours(p, level, 
-                                                           contourRes, 
-                                                           start.x - p->DIST * p->epsilon, 
-                                                           start.x + p->DIST * p->epsilon, 
-                                                           start.y - p->DIST * p->epsilon, 
-                                                           start.y + p->DIST * p->epsilon);
+        vector<Point> initialContour = getGaussianContours(p,
+                                       level,
+                                       contourRes,
+                                       start.x - p->DIST * p->epsilon, 
+                                       start.x + p->DIST * p->epsilon, 
+                                       start.y - p->DIST * p->epsilon, 
+                                       start.y + p->DIST * p->epsilon);
         if (!initialContour.empty()) {
             Point firstCriticalPoint = getCriticalPoint(p, initialContour);
             criticalPathPoints.push_back(firstCriticalPoint);
@@ -308,6 +310,12 @@ struct criticalPath{
         Point criticalPoint = localContour[bestIdx];
 
         criticalPathPoints.push_back(criticalPoint);
+        
+        fprintf(p->out,
+            "CriticalPoint %d\n%f %f\n",
+            criticalPathPoints.size(),
+            criticalPoint.x,
+            criticalPoint.y);
 
         return criticalPoint;
     }
@@ -474,3 +482,4 @@ struct criticalPath{
    }
 };
 
+#endif //CRITICALPATH_H

@@ -24,7 +24,7 @@ def make(target):
     args = [pylinux]
   
   elif target == "main":
-    args = ["c++", "main.cpp", "-o", "main"]
+    args = ["c++", "main.cpp","-O3","-Wall","-std=c++11", "-o", "main"]
   
   else:
     print(f"{target} is not a valid target")

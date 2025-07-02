@@ -1,5 +1,5 @@
-
-#include "point.h"
+#ifndef PARAM_H
+#define PARAM_H
 
 typedef struct Param_s{
 default_random_engine generator;
@@ -26,3 +26,5 @@ vector<Point> gaussianVar;
 
 int currentGaussian1;
 } Param;
+
+#endif //PARAM_H

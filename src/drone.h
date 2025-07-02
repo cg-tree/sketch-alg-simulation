@@ -1,4 +1,5 @@
-
+#ifndef DRONE_H
+#define DRONE_H
 
 class Drone {
     public :
@@ -311,3 +312,5 @@ class Drone {
 
 };
 #endif //LEGACY
+
+#endif //DRONE_H

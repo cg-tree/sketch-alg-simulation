@@ -1,4 +1,5 @@
-
+#ifndef PLUME_H
+#define PLUME_H
 
 struct PLUME{
     vector<Ellipse> ovals;
@@ -57,4 +58,4 @@ struct PLUME{
     }
   
 };
-
+#endif //PLUME_H

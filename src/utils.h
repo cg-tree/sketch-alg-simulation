@@ -1,4 +1,5 @@
-
+#ifndef UTILS_H
+#define UTILS_H
 #ifndef LEGACY
 double changeGradient(double angleA, double angleB){
   assert( abs(angleA) < (2*PI) );
@@ -353,12 +354,16 @@ vector<Point> getGaussianContours(Param* p,
 
     vector<Point> cleaned = removeDuplicatePoints(levelSetPoints);
 
+    fprintf(p->out,"ContourLevel %f\n",level);
+    for(int i = 0; i< cleaned.size(); ++i){
+      fprintf(p->out,"%f %f\n",cleaned[i].x,cleaned[i].y);
+    }
     if (cleaned.size() < 2) {
         cout << "few level set points: " << cleaned.size() << endl;
         return cleaned;
     }
 
-
+    
     return cleaned;
 }
 
@@ -1038,3 +1043,4 @@ double estimateArea(vector<Point> polygon)
     return area ;
 }
 
+#endif //UTILS_H

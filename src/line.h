@@ -1,6 +1,10 @@
 
 #ifndef LINE_H
 #define LINE_H
+
+#include "point.h"
+//class Point;
+
 class Line {
 
 public:

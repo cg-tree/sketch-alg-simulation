@@ -1,5 +1,6 @@
 #include "logging.h"
 #include "stats.h"
+#include "utils.h"
 
 void Sync(Param* p, Drone &A, Drone &B, double alpha, double dist, PLUME &plume)
 {
@@ -121,6 +122,7 @@ bool CrossPlume(Param* p, Drone &A, Drone &B, double alpha, PLUME &plume)
         iterate--;
         if (iterate < 0){
             print_data(p, A,B);
+            fclose(p->out);
             exit(0);
         }
        // cout<<crossing<<" "<<A.inside<<" "<<A.droneIn<<endl;
@@ -183,6 +185,7 @@ bool CrossPlume(Param* p, Drone &A, Drone &B, double alpha, PLUME &plume)
             {
                 cout<<"CrossPlume() Iterations exceeding ..."<<endl;
                 print_data(p, A,B);
+                fclose(p->out);
                 exit (0);
             }
         //    Sync2 (A,B, p->alpha);
@@ -245,6 +248,7 @@ bool CrossCriticalPath(Param* p, Drone &A, Drone &B, double alpha, criticalPath 
 
         if (--iterate < 0) {
             print_data(p, A, B);
+            fclose(p->out);
             std::exit(0);
         }
 
@@ -311,6 +315,7 @@ bool CrossCriticalPath(Param* p, Drone &A, Drone &B, double alpha, criticalPath 
             if (++iter > p->maxiterations) {
                 cout << "CrossCriticalPath() Iterations exceeding ..." << endl;
                 print_data(p, A, B);
+                fclose(p->out);
                 std::exit(0);
             }
         }
@@ -320,54 +325,6 @@ bool CrossCriticalPath(Param* p, Drone &A, Drone &B, double alpha, criticalPath 
 }
 
 
-
-#ifndef LEGACY
-/*****************************************
- * this is a simple test that is accurate when there is only one gaussian
- * we compute the shortest path between the drone and the center of the gaussian
- * and take that to be the real gradient.
- * Then we can try to compute the error.
- * I'm concerned about the use of polar coordinates because it introduces additional
- * complexity compared to the alternatives that we could use in cartesian coordinates
- * such as: 
- *   store the normalized grad vector, or normalize to either the x or y component
- * 
- * nabla is supposed to store the angle of the gradient(scalar)
- * */
-static void legacyGradientLogging(
-    const Point& center,
-    const Drone& A,
-    const std::vector<double>& gradient_vec,
-    FILE* out = stderr    // default to stderr; change if you have another stream
-) {
-    // distance
-    fprintf(out,
-            "distance from droneA to source %f\n",
-            get_dist(center, A.position));
-
-    // real vs approx gradient
-    Point realgrad{ center.x - A.position.x,
-                    center.y - A.position.y };
-    Point graderr{ realgrad.x - gradient_vec[0],
-                   realgrad.y - gradient_vec[1] };
-    fprintf(out,
-            "real grad: %f, %f\n grad_approx: %f, %f\n grad_error: %f,%f\n",
-            realgrad.x, realgrad.y,
-            gradient_vec[0], gradient_vec[1],
-            graderr.x, graderr.y);
-
-    std::vector<double> rgrad{ realgrad.x, realgrad.y };
-    double realgradangle = getAngle(rgrad);
-    fprintf(out,
-            "nabla %f realgrad angle %f\n",
-            A.nabla, realgradangle);
-
-    fflush(out);
-}
-#else
-// no-op stub
-inline void legacyGradientLogging(...) {}
-#endif
 
 
 
@@ -415,9 +372,6 @@ void sketch_algorithm(Param* p)
                 auto gradient_vec = cp.getGradientAtPoint(crossData.first);
                 A.LearnGradient(p, p->alpha, p->epsilon, crossData.first, B, gradient_vec);
                 
-                #ifndef LEGACY
-                    legacyGradientLogging(p->gaussianCenter[0], A, gradient_vec);
-                #endif
                 
                 B.LearnGradient(p, p->alpha, p->epsilon, crossData.first, A, gradient_vec);
             }
@@ -426,6 +380,7 @@ void sketch_algorithm(Param* p)
             if (iter > p->maxiterations) {
                 // Fatal: Dump & Exit
                 print_data(p, A,B); 
+                fclose(p->out);
                 exit (1);
             }
         }

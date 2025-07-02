@@ -1,6 +1,6 @@
+#ifndef GLOBAL_H
+#define GLOBAL_H
 
-
-#include "point.h"
 
 default_random_engine generator;
 
@@ -37,4 +37,4 @@ vector<Point> gaussianVar;
 
 int currentGaussian1;
 #endif // LEGACY
-
+#endif //GLOBAL_H

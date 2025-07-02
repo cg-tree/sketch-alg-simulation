@@ -1,4 +1,5 @@
-
+#ifndef CUBICSPLINE_H
+#define CUBICSPLINE_H
 struct CubicSpline {
     std::vector<double> x, a, b, c, d;  
 
@@ -58,4 +59,4 @@ struct CubicSpline {
     }
 };
 
-
+#endif //CUBICSPLINE_H
