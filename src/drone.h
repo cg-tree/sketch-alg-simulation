@@ -53,6 +53,7 @@ class Drone {
         side(side) {}
     
     //this appears to be a broken implementation of this function but we need it to compile
+    // MoveDrone 0
     bool MoveDrone(Param* p, double alpha, double dist, PLUME &plume, int callSource)
     {
         Point nextPosition;
@@ -62,6 +63,7 @@ class Drone {
         motion = PointUtil::vector(nabla + p->alpha, dist);
         nextPosition = position + motion;
         
+        fprintf(p->out,"MoveDrone0 %x\n%f %f\n",this,nextPosition.x,nextPosition.y);
         points.push_back(nextPosition);
         LineSegment dronemotion = LineSegment(position, nextPosition);
         
@@ -169,6 +171,7 @@ class Drone {
     }
 
     // Fixed implementation
+    // MoveDrone 1
     void MoveDrone(Param* p, double alpha, double dist, 
                                     double diffepsilon, int callSource)
     {
@@ -178,6 +181,7 @@ class Drone {
         motion = PointUtil::vector(nabla + p->alpha, dist);
         nextPosition = position + motion;
         
+        fprintf(p->out,"MoveDrone1 %x\n%f %f\n",this,nextPosition.x,nextPosition.y);
         // points.push_back (nextPosition);
         currPath = LineSegment(position, nextPosition);
         

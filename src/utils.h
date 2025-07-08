@@ -680,7 +680,7 @@ vector<double> gradient_LSQ(Param* p, vector<Point> points)
 // This function computes the gradient of the curvature at a point.
 // This was originally supposed to be used in finding the gradient
 // of the critical path.
-std::vector<double> curvature_gradient_LSQ(
+std::vector<double> curvature_gradient_LSQ(Param* p,
     std::map<Point, double> surroundingCurvatures,
     std::pair<Point, double> crossingPointCurvature) {
 
@@ -714,7 +714,8 @@ std::vector<double> curvature_gradient_LSQ(
 
     // Solve for x = A_pinv * b
     std::vector<double> gradient = prod(A_pinv, b); 
-
+    fprintf(p->out,"CurvatureGradient %f %f %f %f\n",
+        xB, yB, gradient[0], gradient[1]);
     return gradient;
 }
 

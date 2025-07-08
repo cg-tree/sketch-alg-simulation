@@ -316,6 +316,7 @@ struct criticalPath{
             criticalPathPoints.size(),
             criticalPoint.x,
             criticalPoint.y);
+        //curvature_gradient_LSQ(p,surroundingPoints,point);
 
         return criticalPoint;
     }

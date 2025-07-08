@@ -340,6 +340,11 @@ void sketch_algorithm(Param* p)
     // 2) Initialize Drones & stat tracking
     Drone A (p->drone_start_A, p->drone_start_A, 1, 0, true);
     Drone B (p->drone_start_B, p->drone_start_B, 2, 0, false);
+
+
+    fprintf(p->out,"MoveDrone1 %x\n%f %f\n",&A,p->drone_start_A.x,p->drone_start_A.y);
+    fprintf(p->out,"MoveDrone1 %x\n%f %f\n",&B,p->drone_start_B.x,p->drone_start_B.y);
+
     Point startPoint = {(p->drone_start_A.x + p->drone_start_B.x) / 2,
                         (p->drone_start_A.y + p->drone_start_B.y) / 2};
 
@@ -438,13 +443,13 @@ void test_infrastructure(Param* p)
     p->gaussianCenter.clear();
     p->gaussianVar.clear();
     //initial direction in radians
-    p->alpha = 1.47; // slightly off pi/2 to try to cause early crossing
+    p->alpha = PI/2; // slightly off pi/2 to try to cause early crossing
     //velocity
     p->epsilon = 0.1;
 
     p->CROSSBOUND = 100;
     p->majorAxis = 0.25;
-    p->minorAxis = 0.25;
+    p->minorAxis = 0.75;
     
     p->DIST = sqrt(49);
     
@@ -452,7 +457,6 @@ void test_infrastructure(Param* p)
    
     p->drone_start_B = Point(1 + p->DIST*p->epsilon*0.5,-2.38);
     p->drone_start_A = Point(1 - p->DIST*p->epsilon*0.5,-2.38);
-
     p->drone_start_BB = Point(1 + p->DIST*p->epsilon*0.5,-2.38);
     p->drone_start_AB = Point(1 - p->DIST*p->epsilon*0.5,-2.38);
    
@@ -460,7 +464,7 @@ void test_infrastructure(Param* p)
     p->maxiterations = 10;
     p->num = 1;
     p->gaussianCenter.push_back(Point(1,1));
-    p->gaussianVar.push_back(Point(1,1));
+    p->gaussianVar.push_back(Point(1,3));
 #endif //LEGACY
 #ifdef LEGACY
     // data/gaussian_contours_data_7.txt  
