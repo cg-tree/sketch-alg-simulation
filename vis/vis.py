@@ -9,6 +9,8 @@ movedrone0 = [[],[]]
 movedrone1 = [[],[]]
 tangents = [[],[]]
 
+vecbetween = [[],[]]
+
 drones = []
 movedrone = dict()
 md1 = dict()
@@ -62,6 +64,12 @@ with open('sketch_plot.txt') as f:
         tangents[0].append( float(ee[0]) )
         tangents[1].append( float(ee[1]) )
 
+      elif str(e[0]) == "VectorBetween":
+        write = e[0]
+
+        ee = e[1].split(',')
+        vecbetween[0].append( float(ee[0]) )
+        vecbetween[1].append( float(ee[1]) )
 
       elif "Pen" in str(e[0]):
         write = e[0]
@@ -103,21 +111,28 @@ with open('sketch_plot.txt') as f:
 
         plt.delaxes(md1[drone])
 
-        md1[drone], = ax.plot(movedrone[drone][0],movedrone[drone][1],color=color,linestyle='-.',lw=3,label="MoveDrone1 "+drone)
+        md1[drone], = ax.plot(movedrone[drone][0],movedrone[drone][1],color=color,linestyle='-.',lw=3, marker='D',label="MoveDrone1 "+drone)
    
       elif write == "Tangent":
 
         tangents[0].append( float(e[0]) )
         tangents[1].append( float(e[1]) )
 
-        #color = tan.get_color()
-        #plt.delaxes(tan)
-
-        #tan, = ax.plot(tangents[0],tangents[1],linestyle='',marker='x',label='Tangents')
         posx = tangents[0][-2]
         posy = tangents[1][-2]
         ax.annotate("", xytext=(posx,posy), xy=(posx+tangents[0][-1], posy+tangents[1][-1]),
             arrowprops=dict( color='orange', arrowstyle="->" ) )
+
+      elif write == "VectorBetween":
+
+        vecbetween[0].append( float(e[0]) )
+        vecbetween[1].append( float(e[1]) )
+
+        posx = vecbetween[0][-2]
+        posy = vecbetween[1][-2]
+        ax.annotate("", xytext=(posx,posy), xy=(posx+vecbetween[0][-1], posy+vecbetween[1][-1]),
+            arrowprops=dict( color='blue', arrowstyle="->" ) )
+
       else:
         print(write)
 

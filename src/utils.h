@@ -955,7 +955,6 @@ std::vector<double> compute_curvature_derivative(const std::vector<Point>& path,
     return dk_ds;
 }
 
-
 #ifndef LEGACY
 double getAngle(vector<double> A)
 {

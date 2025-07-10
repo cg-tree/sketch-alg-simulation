@@ -61,13 +61,23 @@ struct criticalPath{
         return static_cast<int>(localContour.size());
     }
 
+#ifdef LEGACY
     vector<Point> getCriticalPathPoints() {
         std::sort(criticalPathPoints.begin(), criticalPathPoints.end()); 
         vector<Point> cleaned = removeDuplicatePoints(criticalPathPoints, diffepsilon);
 
         return cleaned;
     }
+#endif //LEGACY
 
+#ifndef LEGACY
+
+    vector<Point> getCriticalPathPoints() {
+        vector<Point> cleaned = removeDuplicatePoints(criticalPathPoints,diffepsilon);
+        return cleaned;
+    }
+
+#endif //LEGACY
     std::pair<CubicSpline, CubicSpline> getCriticalPathSpline() {
         // just want to sort just in case
         vector<Point> criticalPathPoints = getCriticalPathPoints();
@@ -212,9 +222,17 @@ struct criticalPath{
         droneA.currentTangent = tangentA;
         droneB.currentTangent  = tangentB;
 
+#ifdef LEGACY
         droneA.currentContourGradient = {-tangentA[1], tangentA[0]};
         droneB.currentContourGradient = {tangentB[1], -tangentB[0]};
+#endif //LEGACY
+#ifndef LEGACY
+        Point ortha = get_orthogonal_vector(tangentA[0],tangentA[1]);
+        droneA.currentContourGradient = {ortha.x,ortha.y};
+        Point orthb = get_orthogonal_vector(tangentB[0],tangentB[1]);
+        droneB.currentContourGradient = {orthb.x,orthb.y};
 
+#endif //LEGACY
         /*
         for(int i = 0; i < tangentA.size(); i++){
             cout << "tangent A: [" << i << "]: " << tangentA[i] << endl;
@@ -227,14 +245,25 @@ struct criticalPath{
 
         vector<Point> cpPoints = getCriticalPathPoints();
         vector<double> vectorBetween = {0.0, 0.0};
+        Point lastCPPoint;
+        lastCPPoint.x = 0;
+        lastCPPoint.y = 0;
+
         if (!cpPoints.empty()) {
-            Point lastCPPoint = cpPoints.back();
+            lastCPPoint = cpPoints.back();
 
             // FIX ME: supposed to be vector normal to critical point,
             // but not sure how robust this is.
+#ifdef LEGACY
             vectorBetween = {-lastCPPoint.y, lastCPPoint.x}; 
+#endif //LEGACY
+#ifndef LEGACY
+            Point vecbet = get_orthogonal_vector(lastCPPoint.x,lastCPPoint.y);
+            vectorBetween = {vecbet.x,vecbet.y};
+#endif //LEGACY
         }
 
+        fprintf(p->out,"VectorBetween %f,%f\n%f %f\n",lastCPPoint.x,lastCPPoint.y,vectorBetween[0],vectorBetween[1]);
 
         double crossProductA = vectorBetween[0] * tangentA[1] - vectorBetween[1] * tangentA[0];
         double crossProductB = vectorBetween[0] * tangentB[1] - vectorBetween[1] * tangentB[0];
@@ -352,19 +381,21 @@ struct criticalPath{
             double endCenterX = (droneA.last.x + droneB.last.x) * 0.5;
             double endCenterY = (droneA.last.y + droneB.last.y) * 0.5;
             
-            vector<Point> localContourStart = getGaussianContours(p, startLevel, 
-                                                             contourRes, 
-                                                             startCenterX - 1*p->DIST*p->epsilon, 
-                                                             startCenterX + 1*p->DIST*p->epsilon, 
-                                                             startCenterY - 1*p->DIST*p->epsilon, 
-                                                             startCenterY + 1*p->DIST*p->epsilon); 
+            vector<Point> localContourStart = getGaussianContours(p,
+                startLevel, 
+                contourRes, 
+                startCenterX - 1*p->DIST*p->epsilon, 
+                startCenterX + 1*p->DIST*p->epsilon, 
+                startCenterY - 1*p->DIST*p->epsilon, 
+                startCenterY + 1*p->DIST*p->epsilon); 
 
-            vector<Point> localContourEnd = getGaussianContours(p, endLevel,
-                                                                contourRes,
-                                                                endCenterX - 1*p->DIST*p->epsilon,
-                                                                endCenterX + 1*p->DIST*p->epsilon,
-                                                                endCenterY - 1*p->DIST*p->epsilon,
-                                                                endCenterY + 1*p->DIST*p->epsilon);
+            vector<Point> localContourEnd = getGaussianContours(p,
+                endLevel,
+                contourRes,
+                endCenterX - 1*p->DIST*p->epsilon,
+                endCenterX + 1*p->DIST*p->epsilon,
+                endCenterY - 1*p->DIST*p->epsilon,
+                endCenterY + 1*p->DIST*p->epsilon);
          
             // critical path is path between two critical points                                                      
             Point criticalPointStart = getCriticalPoint(p, localContourStart);
@@ -400,12 +431,13 @@ struct criticalPath{
         }else{
             // we consider this to be a single contour
             // and will need to evaluate where the critical point is
-            vector<Point> localContour = getGaussianContours(p, startLevel, 
-                                                             0.01, 
-                                                             startCenterX - 1*p->DIST*p->epsilon,
-                                                             startCenterX + 1*p->DIST*p->epsilon,
-                                                             startCenterY - 1*p->DIST*p->epsilon,  
-                                                             startCenterY + 1*p->DIST*p->epsilon);
+            vector<Point> localContour = getGaussianContours(p,
+                startLevel, 
+                0.01, 
+                startCenterX - 1*p->DIST*p->epsilon,
+                startCenterX + 1*p->DIST*p->epsilon,
+                startCenterY - 1*p->DIST*p->epsilon,  
+                startCenterY + 1*p->DIST*p->epsilon);
 
             Point criticalPoint = getCriticalPoint(p, localContour);
             criticalPathPoints.push_back(criticalPoint);
