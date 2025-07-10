@@ -185,12 +185,13 @@ struct criticalPath{
         if(dotProduct < 0){
             t[0] = -t[0];
             t[1] = -t[1];
-            return t;
-        }else{
-            return t;
+            //return t;
         }
-        
-        
+        /*else{
+            return t;
+        }*/
+        fprintf(p->out,"Tangent %f,%f\n%f %f\n",A.x,A.y,t[0],t[1]); 
+        return t;
     }
 
 

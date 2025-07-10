@@ -7,6 +7,7 @@ contours = [([],[])]
 levels = []
 movedrone0 = [[],[]]
 movedrone1 = [[],[]]
+tangents = [[],[]]
 
 drones = []
 movedrone = dict()
@@ -17,6 +18,7 @@ plt.ion()
 fig, ax = plt.subplots()
 
 cp, = ax.plot(criticalpoints[0],criticalpoints[1],linestyle='',marker='x',label='CriticalPoints')
+tan, = ax.plot(tangents[0],tangents[1],linestyle='',marker = 'x',color='orange',label='Tangents')
 #cp = ax.scatter(criticalpoints[0],criticalpoints[1],label='CriticalPoints')
 #md1, = ax.plot(movedrone1[0],movedrone1[1],linestyle='-.',label="MoveDrone1")
 #ct, = ax.plot([],[])
@@ -52,6 +54,14 @@ with open('sketch_plot.txt') as f:
           drones.append(drone)
           movedrone[drone] =([],[])
           md1[drone], = ax.plot(movedrone[drone][0],movedrone[drone][1])
+
+      elif str(e[0]) == "Tangent":
+        write = e[0]
+
+        ee = e[1].split(',')
+        tangents[0].append( float(ee[0]) )
+        tangents[1].append( float(ee[1]) )
+
 
       elif "Pen" in str(e[0]):
         write = e[0]
@@ -94,7 +104,20 @@ with open('sketch_plot.txt') as f:
         plt.delaxes(md1[drone])
 
         md1[drone], = ax.plot(movedrone[drone][0],movedrone[drone][1],color=color,linestyle='-.',lw=3,label="MoveDrone1 "+drone)
-    
+   
+      elif write == "Tangent":
+
+        tangents[0].append( float(e[0]) )
+        tangents[1].append( float(e[1]) )
+
+        #color = tan.get_color()
+        #plt.delaxes(tan)
+
+        #tan, = ax.plot(tangents[0],tangents[1],linestyle='',marker='x',label='Tangents')
+        posx = tangents[0][-2]
+        posy = tangents[1][-2]
+        ax.annotate("", xytext=(posx,posy), xy=(posx+tangents[0][-1], posy+tangents[1][-1]),
+            arrowprops=dict( color='orange', arrowstyle="->" ) )
       else:
         print(write)
 
