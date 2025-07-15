@@ -263,7 +263,7 @@ struct criticalPath{
 #endif //LEGACY
         }
 
-        fprintf(p->out,"VectorBetween %f,%f\n%f %f\n",lastCPPoint.x,lastCPPoint.y,vectorBetween[0],vectorBetween[1]);
+        //fprintf(p->out,"VectorBetween %f,%f\n%f %f\n",lastCPPoint.x,lastCPPoint.y,vectorBetween[0],vectorBetween[1]);
 
         double crossProductA = vectorBetween[0] * tangentA[1] - vectorBetween[1] * tangentA[0];
         double crossProductB = vectorBetween[0] * tangentB[1] - vectorBetween[1] * tangentB[0];
@@ -401,6 +401,11 @@ struct criticalPath{
             Point criticalPointStart = getCriticalPoint(p, localContourStart);
             Point criticalPointEnd = getCriticalPoint(p, localContourEnd);
 
+            Point vectorBetween = {criticalPointEnd.x - criticalPointStart.x,
+            criticalPointEnd.y - criticalPointStart.y};
+            fprintf(p->out,"VectorBetween %f,%f\n%f %f\n",criticalPointEnd.x,criticalPointEnd.y,vectorBetween.x,vectorBetween.y);
+
+            
             criticalPathPoints.push_back(criticalPointStart);
             criticalPathPoints.push_back(criticalPointEnd);
 
@@ -416,8 +421,18 @@ struct criticalPath{
 
             double denom = (startX1 - EndX2)*(cpY3 - cpY4) - (startY1 - EndY2)*(cpX3 - cpX4);
             if (denom == 0){
+#ifndef LEGACY
+            startX1 = droneB.position.getX();
+            startY1 = droneB.position.getY();
+            EndX2 = droneB.last.getX();
+            EndY2 = droneB.last.getY();
+            denom = (startX1 - EndX2)*(cpY3 - cpY4) - (startY1 - EndY2)*(cpX3 - cpX4);
+
+              if(denom == 0){
+#endif//LEGACY
                 cout << "Exception! No intersection!"<<endl;
                 exit(0);
+              }
             }
 
 
@@ -453,7 +468,7 @@ struct criticalPath{
        Point motion = PointUtil::vector(droneA.nabla + p->alpha, dist/100);
        cout << "Motion:  X = " << motion.x << "   Y = " << motion.y << "      ";
        
-       for(int i = 0; i < 100; i++){
+       for(int i = 0; i < p->maxiterations; i++){
 
             std::pair<int,int> crossInfo = checkCross(p, droneA, droneB, motion);
     
@@ -478,6 +493,12 @@ struct criticalPath{
                    
                 return CrossData(crossPoint, 2);
             }
+#ifndef LEGACY
+
+       return CrossData( Point (0,0), 0 );
+            //this is where the drone is being moved without proper authorization
+            //drone movement is not the responsibility of this function
+#endif//LEGACY
             motion += motion;
        }
        

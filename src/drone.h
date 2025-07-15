@@ -189,9 +189,9 @@ class Drone {
         distTraversed += dist;
         
         // Check for position exception
-        if (abs(nextPosition.x) > 5 || abs(nextPosition.y) > 5)
+        if (abs(nextPosition.x) > 5 || abs(nextPosition.y) > 5){
             //cout << "position exception! "<<endl;
-
+        }
         last = position;
         position = nextPosition;
         polytope.push_back (position);
