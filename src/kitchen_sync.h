@@ -247,6 +247,9 @@ bool CrossCriticalPath(Param* p, Drone &A, Drone &B, double alpha, criticalPath 
         A.angleTurned += std::abs(alphainitial);
 
         if (--iterate < 0) {
+
+          break;
+            printf("\n\ndying here \n\n");
             print_data(p, A, B);
             fclose(p->out);
             std::exit(0);
@@ -362,9 +365,16 @@ void sketch_algorithm(Param* p)
         stats.startLevel = cp.levelAt(p, A.position); 
 
         CrossData crossData = cp.getCross(p, A, B, p->alpha, p->epsilon); //Grabbed outside for stats recording scope
+#ifdef LEGACY
         while (((A.numCross + B.numCross == 0) || (3 == A.side + B.side)) 
                 && (!loopEnd))
+#endif//LEGACY
+#ifndef LEGACY
+        if(((A.numCross + B.numCross == 0) || (3 == A.side + B.side)) 
+                && (!loopEnd))
+#endif//LEGACY
         {
+
             // 3) Move both drones
             A.MoveDrone(p, p->alpha, p->epsilon, cp.diffepsilon, 1);
             B.MoveDrone(p, p->alpha, p->epsilon, cp.diffepsilon, 1);
@@ -384,6 +394,7 @@ void sketch_algorithm(Param* p)
             ++iter;
             if (iter > p->maxiterations) {
                 // Fatal: Dump & Exit
+                printf("\n\n OWWWWW\n\n");
                 print_data(p, A,B); 
                 fclose(p->out);
                 exit (1);
@@ -433,7 +444,8 @@ void sketch_algorithm(Param* p)
  
     printSummary(p, A);
     print_data (p, A,B);
-    
+
+    printf("Thanks for coming to my TED talk  \n\n");
     return ;
 }   
 

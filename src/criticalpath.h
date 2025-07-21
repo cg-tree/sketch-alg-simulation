@@ -71,7 +71,8 @@ struct criticalPath{
 #endif //LEGACY
 
 #ifndef LEGACY
-
+    //removed the sorting becase the operator is not distance
+    //and the last critical point isn't guaranteed to remain at the end
     vector<Point> getCriticalPathPoints() {
         vector<Point> cleaned = removeDuplicatePoints(criticalPathPoints,diffepsilon);
         return cleaned;
@@ -210,14 +211,18 @@ struct criticalPath{
         // Need to get the gradient around the initial point
         // and the end point in order to compare sign of 
         // the gradient
-        //cout << "check cross function" << endl;
-        //cout << "droneA position: " << droneA.position.x + motion.x << " " << droneA.position.y + motion.y << endl;
-        //cout << "droneB position: " << droneB.position.x + motion.x << " " << droneB.position.y + motion.y << endl;
-  
-
+ 
+#ifdef LEGACY
         //get tangent vector, which is normal to the gradient vector
         vector<double> tangentA = getContourTangent(p, droneA.position + motion, droneB.position + motion);
         vector<double> tangentB = getContourTangent(p, droneB.position + motion, droneA.position + motion);
+#endif//LEGACY
+
+#ifndef LEGACY
+        //we don't have foresight... we can't use information we don't have
+        vector<double> tangentA = getContourTangent(p, droneA.position, droneB.position);
+        vector<double> tangentB = getContourTangent(p, droneB.position, droneA.position);
+#endif//LEGACY
 
         droneA.currentTangent = tangentA;
         droneB.currentTangent  = tangentB;
@@ -233,18 +238,10 @@ struct criticalPath{
         droneB.currentContourGradient = {orthb.x,orthb.y};
 
 #endif //LEGACY
-        /*
-        for(int i = 0; i < tangentA.size(); i++){
-            cout << "tangent A: [" << i << "]: " << tangentA[i] << endl;
-        }
-        
-        for(int i = 0; i < tangentB.size(); i++){
-            cout << "tangent B: [" << i << "]: " << tangentB[i] << endl;
-        }*/
         
 
         vector<Point> cpPoints = getCriticalPathPoints();
-        vector<double> vectorBetween = {0.0, 0.0};
+        vector<double> vectorBetween = {-0.5*(ortha.x + orthb.x), -0.5*(ortha.y+orthb.y)};
         Point lastCPPoint;
         lastCPPoint.x = 0;
         lastCPPoint.y = 0;
@@ -258,12 +255,12 @@ struct criticalPath{
             vectorBetween = {-lastCPPoint.y, lastCPPoint.x}; 
 #endif //LEGACY
 #ifndef LEGACY
-            Point vecbet = get_orthogonal_vector(lastCPPoint.x,lastCPPoint.y);
-            vectorBetween = {vecbet.x,vecbet.y};
+            Point vecbet = get_orthogonal_vector(vectorBetween[0],vectorBetween[1]);
+            //vectorBetween = {vecbet.x, vecbet.y};
 #endif //LEGACY
         }
 
-        //fprintf(p->out,"VectorBetween %f,%f\n%f %f\n",lastCPPoint.x,lastCPPoint.y,vectorBetween[0],vectorBetween[1]);
+        fprintf(p->out,"VectorBetween %f,%f\n%f %f\n",lastCPPoint.x,lastCPPoint.y,vectorBetween[0],vectorBetween[1]);
 
         double crossProductA = vectorBetween[0] * tangentA[1] - vectorBetween[1] * tangentA[0];
         double crossProductB = vectorBetween[0] * tangentB[1] - vectorBetween[1] * tangentB[0];
@@ -401,9 +398,6 @@ struct criticalPath{
             Point criticalPointStart = getCriticalPoint(p, localContourStart);
             Point criticalPointEnd = getCriticalPoint(p, localContourEnd);
 
-            Point vectorBetween = {criticalPointEnd.x - criticalPointStart.x,
-            criticalPointEnd.y - criticalPointStart.y};
-            fprintf(p->out,"VectorBetween %f,%f\n%f %f\n",criticalPointEnd.x,criticalPointEnd.y,vectorBetween.x,vectorBetween.y);
 
             
             criticalPathPoints.push_back(criticalPointStart);
@@ -421,18 +415,8 @@ struct criticalPath{
 
             double denom = (startX1 - EndX2)*(cpY3 - cpY4) - (startY1 - EndY2)*(cpX3 - cpX4);
             if (denom == 0){
-#ifndef LEGACY
-            startX1 = droneB.position.getX();
-            startY1 = droneB.position.getY();
-            EndX2 = droneB.last.getX();
-            EndY2 = droneB.last.getY();
-            denom = (startX1 - EndX2)*(cpY3 - cpY4) - (startY1 - EndY2)*(cpX3 - cpX4);
-
-              if(denom == 0){
-#endif//LEGACY
                 cout << "Exception! No intersection!"<<endl;
                 exit(0);
-              }
             }
 
 
@@ -494,8 +478,11 @@ struct criticalPath{
                 return CrossData(crossPoint, 2);
             }
 #ifndef LEGACY
+         return CrossData( Point (0,0), 0 );
 
-       return CrossData( Point (0,0), 0 );
+         double startCenterX = (droneA.position.x + droneB.position.x) * 0.5;
+         double startCenterY = (droneA.position.y + droneB.position.y) * 0.5;
+         return CrossData( Point (startCenterX,startCenterY), 0 );
             //this is where the drone is being moved without proper authorization
             //drone movement is not the responsibility of this function
 #endif//LEGACY

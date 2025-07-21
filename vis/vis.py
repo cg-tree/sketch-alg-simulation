@@ -48,7 +48,7 @@ with open('sketch_plot.txt') as f:
         write = e[0]
         drone = e[1]
 
-      elif str(e[0]) == "MoveDrone1":
+      elif str(e[0]) == "MoveDrone1" or str(e[0]) == "MoveDrone":
         write = e[0]
         drone = e[1]
         print(e[1])
@@ -103,7 +103,7 @@ with open('sketch_plot.txt') as f:
 
         md0[drone], = ax.plot(movedrone[drone][0],movedrone[drone][1],color=color,linestyle='-.',lw=3,label="MoveDrone1 "+drone)
       
-      elif write == "MoveDrone1":
+      elif write == "MoveDrone1" or write == "MoveDrone":
         movedrone[drone][0].append( float(e[0]) )
         movedrone[drone][1].append( float(e[1]) )
 
