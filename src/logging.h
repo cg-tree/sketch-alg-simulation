@@ -8,10 +8,6 @@
 #include <array>
 #include <string>
 
-//For printSummary()
-
-
-
 // ANSI escape codes for foreground colors
 // (works on most Unix/Linux/MacOS terminals and on Windows 10+ if VirtualTerminalProcessing is enabled)
 
@@ -29,11 +25,12 @@
 #define COLOR_TEXT(color, text) (std::string(color) + (text) + RESET)
 
 // Helper that formats a double with fixed precision (6 decimals)
-static std::string fmtDouble(double x, int precision = 6){
+static std::string fmtDouble(double x, int precision = 3) {
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(precision) << x;
     return oss.str();
 }
+
 
 
 // ----------------------------------------------------------------

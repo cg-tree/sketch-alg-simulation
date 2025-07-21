@@ -2,6 +2,53 @@
 #include "stats.h"
 #include "utils.h"
 
+#ifndef LEGACY
+/**
+ * @brief Synchronizes Drone B's position and gradient to follow Drone A.
+ *
+ * This function computes a new position for Drone B based on Drone A's orientation
+ * and the angular offset `alpha`. The new position is set at a distance of
+ * `DIST * epsilon` from A in a direction perpendicular to A's current gradient.
+ *
+ * The direction of offset depends on the sign of alpha:
+ *  - If alpha > 0, offset is rotated left (−π/2)
+ *  - If alpha < 0, offset is rotated right (+π/2)
+ *
+ * This function also updates B's gradient to match A's and appends the new position
+ * to B's trajectory (`polytope`).
+ *
+ * @param p        Global parameters
+ * @param A        Lead drone (whose path we're syncing to)
+ * @param B        Follower drone (being updated)
+ * @param alpha    Angular offset for side-stepping
+ * @param dist     Step size (usually epsilon or epsilon²)
+ * @param env      Environment (either PLUME or criticalPath, currently unused)
+ * @param verbose  Optional debug flag to print actions to stdout
+ */
+
+template <typename Env>
+void Sync(Param* p, Drone& A, Drone& B, double alpha, double dist, Env& env, bool verbose = true)
+{
+    Point v;
+    if (p->alpha > 0) {
+        v = PointUtil::vector(A.nabla + p->alpha - PI/2, p->DIST * p->epsilon);
+    } else {
+        v = PointUtil::vector(A.nabla + p->alpha + PI/2, p->DIST * p->epsilon);
+    }
+
+    Point nextPosition = A.position + v;
+    B.last = B.position;        // Save previous position if needed
+    B.position = nextPosition;
+    B.nabla = A.nabla;
+    B.polytope.push_back(nextPosition);
+
+    if (verbose) {
+        std::cout << "[SYNC] Drone " << B.id << " moved to (" << B.position.x << ", " << B.position.y << ")\n";
+        std::cout << "        Based on Drone " << A.id << " with angle " << A.nabla << "\n";
+    }
+}
+
+#else
 void Sync(Param* p, Drone &A, Drone &B, double alpha, double dist, PLUME &plume)
 {
     Point v;
@@ -53,9 +100,43 @@ void Sync(Param* p, Drone &A, Drone &B, double alpha, double dist, criticalPath 
     cout << "exiting sync" << endl;
     return ;
 }
+#endif
 
-/***********************************************************/
+#ifndef LEGACY
+/**
+ * @brief Prints the polytope paths of two drones to the output stream.
+ *
+ * This function writes line segments connecting the points in each drone's 
+ * trajectory (stored in their `polytope` vectors) to the output file stream
+ * specified in the `Param` struct. Each drone's path is drawn in a different 
+ * color using "Pen b" (blue) for Drone A and "Pen r" (red) for Drone B.
+ *
+ * The output is in a textual line-drawing format, suitable for visualization 
+ * tools that parse "Line (x1,y1) (x2,y2)" syntax.
+ *
+ * @param p Pointer to global parameters, including the output file stream
+ * @param A The first drone (blue path)
+ * @param B The second drone (red path)
+ */
+void print_data(Param* p, const Drone& A, const Drone& B)
+{
+    auto print_polytope = [&](const vector<Point>& poly, const char* pen) {
+        fprintf(p->out, "Pen %s\n", pen);
+        int n = poly.size();
+        for (int i = 0; i < n; ++i) {
+            const Point& curr = poly[i];
+            const Point& next = poly[(i + 1) % n];
+            fprintf(p->out, "Line (%lf,%lf) (%lf,%lf)\n", curr.x, curr.y, next.x, next.y);
+        }
+    };
 
+    cout << "Printing data..." << endl;
+    print_polytope(A.polytope, "b");
+    print_polytope(B.polytope, "r");
+    cout << "Done!" << endl;
+}
+
+#else
 void print_data(Param* p, Drone A, Drone B)
 {
     cout << "Printing data..." << endl;
@@ -83,7 +164,7 @@ void print_data(Param* p, Drone A, Drone B)
     cout << "Done!" << endl;
     return ;
 }
-
+#endif
 
 bool CrossPlume(Param* p, Drone &A, Drone &B, double alpha, PLUME &plume)
 {
@@ -203,6 +284,8 @@ bool CrossPlume(Param* p, Drone &A, Drone &B, double alpha, PLUME &plume)
 // FIX ME: Make this work for the critical path tracing
 bool CrossCriticalPath(Param* p, Drone &A, Drone &B, double alpha, criticalPath &cp)
 {
+    cout << "Inside CrossCriticalPath()" << endl;
+
     Point start_pos    = A.last; 
     int   crossing     = A.side; 
     bool  orient       = true;
@@ -309,7 +392,7 @@ bool CrossCriticalPath(Param* p, Drone &A, Drone &B, double alpha, criticalPath 
 
             // ——— only print when the side actually changes ———
             if (A.side != previousSide) {
-                cout << "==== DRONE SIDE NOW " << A.side << " ====" << endl;
+                cout << "==== DRONE " << A.id << " SIDE NOW " << A.side << " ====" << endl;
                 previousSide = A.side;
             }
 
@@ -338,16 +421,26 @@ void sketch_algorithm(Param* p)
     //print_test_infrastructure_info();   //print initialization stats from logging.h
     Stats stats;                        //Per-epoch info
     int epoch = 0;
-    
+    cout << "In epoch..." << epoch << endl;
 
     // 2) Initialize Drones & stat tracking
-    Drone A (p->drone_start_A, p->drone_start_A, 1, 0, true);
-    Drone B (p->drone_start_B, p->drone_start_B, 2, 0, false);
 
+    Drone A ('A',
+            p->drone_start_A, 
+            p->drone_start_A, 
+            1, 
+            0, 
+            true);
+    
+    Drone B ('B',
+            p->drone_start_B, 
+            p->drone_start_B, 
+            2, 
+            0, 
+            false);
 
-    fprintf(p->out,"MoveDrone1 %x\n%f %f\n",&A,p->drone_start_A.x,p->drone_start_A.y);
-    fprintf(p->out,"MoveDrone1 %x\n%f %f\n",&B,p->drone_start_B.x,p->drone_start_B.y);
-
+    fprintf(p->out,"MoveDrone1 %c\n%f %f\n",A.id,p->drone_start_A.x,p->drone_start_A.y);
+    fprintf(p->out,"MoveDrone1 %c\n%f %f\n",B.id,p->drone_start_B.x,p->drone_start_B.y);
     Point startPoint = {(p->drone_start_A.x + p->drone_start_B.x) / 2,
                         (p->drone_start_A.y + p->drone_start_B.y) / 2};
 
@@ -364,7 +457,9 @@ void sketch_algorithm(Param* p)
         // record starting level
         stats.startLevel = cp.levelAt(p, A.position); 
 
-        CrossData crossData = cp.getCross(p, A, B, p->alpha, p->epsilon); //Grabbed outside for stats recording scope
+        //CrossData crossData = cp.getCross(p, A, B, p->alpha, p->epsilon); //Grabbed outside for stats recording scope
+        CrossData crossData{ Point(0,0), false};
+
 #ifdef LEGACY
         while (((A.numCross + B.numCross == 0) || (3 == A.side + B.side)) 
                 && (!loopEnd))
@@ -382,7 +477,7 @@ void sketch_algorithm(Param* p)
             loopEnd = loopEnd || cp.foundSource(A, B);
             
             // 4) Check for a "cross" and if so, learn gradient. 
-            // CrossData crossData = cp.getCross(A, B, p->alpha, p->epsilon);
+            CrossData crossData = cp.getCross(p, A, B, p->alpha, p->epsilon);
             if(crossData.second){
                 auto gradient_vec = cp.getGradientAtPoint(crossData.first);
                 A.LearnGradient(p, p->alpha, p->epsilon, crossData.first, B, gradient_vec);
@@ -419,12 +514,15 @@ void sketch_algorithm(Param* p)
             
         stats.print(epoch++);
 
+        cout << "AFTER STATS PRINT" << endl;
 
         if ( (A.side + B.side) != 3)
         {
+            cout << "A.side + B.side = " << (A.side + B.side) << endl;
             // If A crosses
             if ( (A.side == 2) && (B.side == 2) )
             {
+                cout << "A crossed into B" << endl;
                 p->alpha = -p->epsilon;
                 loopEnd = loopEnd || CrossCriticalPath(p, B, A, p->alpha, cp);
                 cout << "Syncing..." << endl;
@@ -433,13 +531,16 @@ void sketch_algorithm(Param* p)
             }
             else // B crosses
             {
-              p->alpha = p->epsilon;
-              loopEnd = loopEnd || CrossCriticalPath(p, A, B, p->alpha, cp);
-              cout << "Syncing..." << endl;
-              Sync(p, A, B, p->alpha, p->epsilon, cp);
-              B.nabla = A.nabla;
+                cout << "B crossed into A" << endl;
+                p->alpha = p->epsilon;
+                loopEnd = loopEnd || CrossCriticalPath(p, A, B, p->alpha, cp);
+                cout << "Syncing..." << endl;
+                Sync(p, A, B, p->alpha, p->epsilon, cp);
+                B.nabla = A.nabla;
             }
         }
+
+        
     }while (!loopEnd);
  
     printSummary(p, A);
